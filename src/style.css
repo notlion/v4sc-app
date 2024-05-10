@@ -1,0 +1,35 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button {
+  font-size: 18px;
+  color: rgba(0, 0, 0, 0.85);
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 8px;
+  background-color: #eee;
+  user-select: none;
+  transition: transform 0.05s ease-out;
+  &:active {
+    transform: scale(90%);
+  }
+}
+
+#app {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  place-items: center;
+  padding: 20px;
+}
