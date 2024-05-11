@@ -33,3 +33,16 @@ button {
   place-items: center;
   padding: 20px;
 }
+
+.bytes {
+  font: monospace;
+  display: flex;
+  gap: 5px;
+}
+.byte {
+  font: monospace;
+  &.different {
+    background-color: red;
+    color: white;
+  }
+}

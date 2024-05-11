@@ -12,6 +12,8 @@ let pollInterval: number | undefined;
 
 let currentStatus: Uint8Array | undefined;
 
+const statusSamples: Uint8Array[] = [];
+
 const connect = async () => {
   device = await navigator.bluetooth.requestDevice({
     filters: [{ services: [serviceId] }],
@@ -50,7 +52,15 @@ const onPollInterval = () => {
 const onStatusChanged = () => {
   if (!readCharacteristic) return;
   if (!readCharacteristic.value) return;
+  console.assert(readCharacteristic.value.getUint8(0) === 48);
+  console.log("AV input voltage", readCharacteristic.value.getFloat32(2, true));
+  console.log("maybe output voltage", readCharacteristic.value.getFloat32(6, true));
+  console.log("AC input frequency", readCharacteristic.value.getFloat32(10, true));
+  console.log("temperature 1", readCharacteristic.value.getFloat32(14, true));
+  console.log("temperature 2", readCharacteristic.value.getFloat32(18, true));
+  console.log("voltage", readCharacteristic.value.getFloat32(22, true));
   currentStatus = new Uint8Array(readCharacteristic.value.buffer);
+  statusSamples.push(currentStatus);
   m.redraw();
 };
 
@@ -58,13 +68,21 @@ const MainComponent: m.Component = {
   view() {
     const isConnected = device !== undefined;
     return [
-      currentStatus &&
-        m(
-          "p",
-          Array.from(currentStatus)
-            .map((byte) => byte.toString(16).padStart(2, "0"))
-            .join(" ")
-        ),
+      statusSamples.map((status, index) => {
+        const bytes = Array.from(status);
+        const prevBytes = index > 0 && Array.from(statusSamples[index - 1]);
+        return m(
+          ".bytes",
+          bytes.map((byte, i) => {
+            const prevByte = prevBytes ? prevBytes[i] : byte;
+            return m(
+              "span.byte",
+              { className: prevByte !== byte ? "different" : undefined },
+              byte.toString(16).padStart(2, "0")
+            );
+          })
+        );
+      }),
       m(
         "button",
         {
