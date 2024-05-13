@@ -1,5 +1,6 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif,
+    Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
   line-height: 1.5;
   font-weight: 400;
 }
@@ -21,6 +22,7 @@ button {
   background-color: #eee;
   user-select: none;
   transition: transform 0.05s ease-out;
+  cursor: pointer;
   &:active {
     transform: scale(90%);
   }
@@ -45,4 +47,15 @@ button {
     background-color: red;
     color: white;
   }
+}
+
+.status {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+}
+.status-value {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+  font-size: 16px;
+  text-align: right;
 }

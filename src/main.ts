@@ -10,7 +10,23 @@ let writeCharacteristic: BluetoothRemoteGATTCharacteristic | undefined;
 let readCharacteristic: BluetoothRemoteGATTCharacteristic | undefined;
 let pollInterval: number | undefined;
 
-let currentStatus: Uint8Array | undefined;
+interface ChargerStatus {
+  acInputVoltage: number;
+  acInputCurrent: number;
+
+  dcOutputVoltage: number;
+  dcOutputCurrent: number;
+
+  acInputFrequency: number;
+
+  efficiency: number;
+  currentLimitingPoint: number;
+
+  temperature1: number;
+  temperature2: number;
+}
+
+let currentStatus: ChargerStatus | undefined;
 
 const statusSamples: Uint8Array[] = [];
 
@@ -51,38 +67,95 @@ const onPollInterval = () => {
 
 const onStatusChanged = () => {
   if (!readCharacteristic) return;
-  if (!readCharacteristic.value) return;
-  console.assert(readCharacteristic.value.getUint8(0) === 48);
-  console.log("AV input voltage", readCharacteristic.value.getFloat32(2, true));
-  console.log("maybe output voltage", readCharacteristic.value.getFloat32(6, true));
-  console.log("AC input frequency", readCharacteristic.value.getFloat32(10, true));
-  console.log("temperature 1", readCharacteristic.value.getFloat32(14, true));
-  console.log("temperature 2", readCharacteristic.value.getFloat32(18, true));
-  console.log("voltage", readCharacteristic.value.getFloat32(22, true));
-  currentStatus = new Uint8Array(readCharacteristic.value.buffer);
-  statusSamples.push(currentStatus);
+
+  const { value } = readCharacteristic;
+  if (!value) return;
+  console.assert(value.getUint8(0) === 48);
+
+  currentStatus = {
+    acInputVoltage: value.getFloat32(2, true),
+    acInputCurrent: value.getFloat32(6, true),
+    acInputFrequency: value.getFloat32(10, true),
+    temperature1: value.getFloat32(14, true),
+    temperature2: value.getFloat32(18, true),
+    dcOutputVoltage: value.getFloat32(22, true),
+    dcOutputCurrent: value.getFloat32(26, true),
+    currentLimitingPoint: value.getFloat32(30, true),
+    efficiency: value.getFloat32(34, true),
+  };
+
+  statusSamples.push(new Uint8Array(value.buffer));
   m.redraw();
+};
+
+interface StatusRowAttrs {
+  name: string;
+  value?: string | number;
+}
+const StatusRow: m.Component<StatusRowAttrs> = {
+  view({ attrs: { name, value } }) {
+    return [m(".status-name", name), m(".status-value", value ?? "∅")];
+  },
 };
 
 const MainComponent: m.Component = {
   view() {
     const isConnected = device !== undefined;
     return [
-      statusSamples.map((status, index) => {
-        const bytes = Array.from(status);
-        const prevBytes = index > 0 && Array.from(statusSamples[index - 1]);
-        return m(
-          ".bytes",
-          bytes.map((byte, i) => {
-            const prevByte = prevBytes ? prevBytes[i] : byte;
-            return m(
-              "span.byte",
-              { className: prevByte !== byte ? "different" : undefined },
-              byte.toString(16).padStart(2, "0")
-            );
-          })
-        );
-      }),
+      currentStatus &&
+        m(".status", [
+          m(StatusRow, {
+            name: "AC Input Voltage",
+            value: currentStatus.acInputVoltage.toFixed(1) + "v",
+          }),
+          m(StatusRow, {
+            name: "AC Input Current",
+            value: currentStatus.acInputCurrent.toFixed(1) + "a",
+          }),
+          m(StatusRow, {
+            name: "AC Input Frequency",
+            value: currentStatus.acInputFrequency.toFixed(1) + "hz",
+          }),
+          m(StatusRow, {
+            name: "DC Output Voltage",
+            value: currentStatus.dcOutputVoltage.toFixed(1) + "v",
+          }),
+          m(StatusRow, {
+            name: "DC Output Current",
+            value: currentStatus.dcOutputCurrent.toFixed(2) + "a",
+          }),
+          m(StatusRow, {
+            name: "Temperature 1",
+            value: currentStatus.temperature1.toFixed(0) + "°",
+          }),
+          m(StatusRow, {
+            name: "Temperature 2",
+            value: currentStatus.temperature2.toFixed(0) + "°",
+          }),
+          m(StatusRow, {
+            name: "Efficiency",
+            value: currentStatus.efficiency.toFixed(1) + "%",
+          }),
+          m(StatusRow, {
+            name: "Current Limiting Point",
+            value: currentStatus.currentLimitingPoint.toFixed(1) + "%",
+          }),
+        ]),
+      // statusSamples.map((status, index) => {
+      //   const bytes = Array.from(status);
+      //   const prevBytes = index > 0 && Array.from(statusSamples[index - 1]);
+      //   return m(
+      //     ".bytes",
+      //     bytes.map((byte, i) => {
+      //       const prevByte = prevBytes ? prevBytes[i] : byte;
+      //       return m(
+      //         "span.byte",
+      //         { className: prevByte !== byte ? "different" : undefined },
+      //         byte.toString(16).padStart(2, "0")
+      //       );
+      //     })
+      //   );
+      // }),
       m(
         "button",
         {
