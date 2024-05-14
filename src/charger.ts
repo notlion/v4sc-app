@@ -159,6 +159,7 @@ const checksum = (view: DataView, byteOffset: number, byteCount: number) => {
   let sum = 0;
   for (let i = 0; i < byteCount; ++i) {
     sum += view.getUint8(byteOffset + i);
+    sum %= 256;
   }
-  return sum % 256;
+  return sum;
 };
