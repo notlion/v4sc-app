@@ -7,11 +7,12 @@
 
 body {
   margin: 0;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   place-items: center;
-  min-width: 200px;
   min-height: 100vh;
+  overflow: hidden;
 }
 
 button,
@@ -39,10 +40,10 @@ select {
 
 #app {
   width: 100%;
-  max-width: 400px;
+  min-width: 240px;
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: 0;
   gap: 20px;
 }
 
