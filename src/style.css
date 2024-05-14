@@ -22,16 +22,19 @@ select {
   border-radius: 8px;
   background-color: #eee;
   color: rgba(0, 0, 0, 0.85);
+  user-select: none;
+  cursor: pointer;
+  transition: all 0.05s ease-out;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  &:active {
+    transform: scale(105%);
+    background-color: rgb(0, 255, 149);
+  }
 }
 
 button {
   padding: 10px 16px;
-  user-select: none;
-  transition: transform 0.05s ease-out;
-  cursor: pointer;
-  &:active {
-    transform: scale(90%);
-  }
 }
 
 select {
@@ -45,19 +48,6 @@ select {
   flex-direction: column;
   padding: 0;
   gap: 20px;
-}
-
-.bytes {
-  font: monospace;
-  display: flex;
-  gap: 5px;
-}
-.byte {
-  font: monospace;
-  &.different {
-    background-color: red;
-    color: white;
-  }
 }
 
 .status {
