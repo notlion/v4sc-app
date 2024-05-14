@@ -63,6 +63,10 @@ const MainComponent: m.Component = {
               value: currentStatus.acInputCurrent.toFixed(1) + "a",
             }),
             m(StatusRow, {
+              name: "AC Input Power",
+              value: (currentStatus.acInputVoltage * currentStatus.acInputCurrent).toFixed(1) + "w",
+            }),
+            m(StatusRow, {
               name: "AC Input Frequency",
               value: currentStatus.acInputFrequency.toFixed(1) + "hz",
             }),
@@ -73,6 +77,11 @@ const MainComponent: m.Component = {
             m(StatusRow, {
               name: "DC Output Current",
               value: currentStatus.dcOutputCurrent.toFixed(2) + "a",
+            }),
+            m(StatusRow, {
+              name: "DC Output Power",
+              value:
+                (currentStatus.dcOutputVoltage * currentStatus.dcOutputCurrent).toFixed(1) + "w",
             }),
             m(StatusRow, {
               name: "Temperature 1",
