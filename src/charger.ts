@@ -7,6 +7,7 @@ const writeCharacteristicId = 0xffe3;
 const writeRefreshBytes = [0x02, 0x06, 0x06];
 const writeOutputVoltageBytes = [0x06, 0x07];
 const writeOutputCurrentBytes = [0x06, 0x08];
+const writeOutputDisabledBytes = [0x06, 0x0c];
 
 const statusUpdateCode = 0x0630;
 const setOutputVoltageResponseCode = 0x0703;
@@ -16,7 +17,9 @@ const setOutputCurrentResponseCode = 0x0803;
 const setOutputCurrentErrorCode = 0x0800;
 const setOutputCurrentSuccessCode = 0x0901;
 
-interface ChargerStatus {
+export interface ChargerStatus {
+  time: number;
+
   acInputVoltage: number;
   acInputCurrent: number;
 
@@ -49,8 +52,6 @@ export class Charger {
     this.device = await navigator.bluetooth.requestDevice({
       filters: [{ services: [serviceId] }],
     });
-    if (!this.device) return;
-
     this.device.addEventListener("gattserverdisconnected", () => {
       this.disconnect();
       m.redraw();
@@ -115,6 +116,18 @@ export class Charger {
     return this.writeCharacteristic.writeValue(array);
   }
 
+  async setOutputEnabled(enabled: boolean) {
+    if (!this.writeCharacteristic) return;
+    const array = new Uint8Array(7);
+    const view = new DataView(array.buffer);
+    view.setUint8(0, writeOutputDisabledBytes[0]);
+    view.setUint8(1, writeOutputDisabledBytes[1]);
+    view.setUint32(2, enabled ? 0 : 1, true);
+    view.setUint8(6, checksum(view, 1, 5));
+    // console.log(Array.from(array).map((x) => x.toString(16).padStart(2, "0")));
+    return this.writeCharacteristic.writeValue(array);
+  }
+
   private onReadCharacteristicChanged() {
     if (!this.readCharacteristic?.value) return;
 
@@ -122,6 +135,7 @@ export class Charger {
     const code = value.getUint16(0, true);
     if (code === statusUpdateCode) {
       this.status.push({
+        time: Date.now(),
         acInputVoltage: value.getFloat32(2, true),
         acInputCurrent: value.getFloat32(6, true),
         acInputFrequency: value.getFloat32(10, true),

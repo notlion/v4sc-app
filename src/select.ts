@@ -2,7 +2,7 @@ import m from "mithril";
 
 interface SelectInputAttrs {
   options: string[];
-  selected: string;
+  selected?: string;
   onChange: (index: number) => void;
 
   className?: string;
@@ -24,7 +24,7 @@ export const SelectInput: m.Component<SelectInputAttrs> = {
           "option",
           {
             value: option,
-            selected: selected === option,
+            selected: selected !== undefined && selected === option,
           },
           option
         );
