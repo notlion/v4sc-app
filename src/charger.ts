@@ -110,15 +110,21 @@ export class Charger {
   }
 
   getCellCount() {
+    const commonCellCounts = [20, 24, 30, 32, 36, 40];
     // lazy load cell count
     if (this.cellCount === undefined) {
-      // get charger v setpoint
-      if (!this.setpoint) return;
-      let unrounded = this.setpoint.voltage / 4.24; //a little higher to be safe
-      if (unrounded % 1 >= 0.5) {
-        this.cellCount = Math.ceil(unrounded);
-        console.log("Cell count estimated", this.cellCount);
-      } else console.log("Cell count ambiguous", unrounded, this.setpoint.voltage);
+      const setV = this.setpoint?.voltage;
+      const atV = this.currentStatus()?.dcOutputVoltage;
+      if (!this.setpoint || !setV || !atV) return;
+      for (const cellCount of commonCellCounts) {
+        const maxTargetV = cellCount * 4.24;
+        if (setV >= maxTargetV) continue;
+        const minTargetV = cellCount * 3.0;
+        if (atV < minTargetV) continue;
+        console.log("Cell count estimated", cellCount);
+        this.cellCount = cellCount;
+        break;
+      }
     }
     return this.cellCount;
   }
@@ -225,6 +231,7 @@ export class Charger {
         voltage: value.getFloat32(2, true),
         current: value.getFloat32(6, true),
       };
+      this.cellCount = undefined;
       // console.log("Not sure what else is in here", value);
     } else if (code === setOutputVoltageResponseCode) {
       const subCode = value.getUint16(2, true);
