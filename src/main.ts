@@ -128,6 +128,16 @@ const MainComponent: m.Component = {
             value: (status: ChargerStatus) => status.currentLimitingPoint,
             display: (value: number) => value.toFixed(1) + "%",
           }),
+          m(StatusRow, {
+            name: "Charge Percent (Estimate)",
+            value: () => charger.getStateOfCharge() ?? 0,
+            display: (value: number) => value.toFixed(1) + "%",
+          }),
+          m(StatusRow, {
+            name: "Cell Count (Estimate)",
+            value: () => charger.getCellCount() ?? 0,
+            display: (value: number) => value.toFixed(0),
+          }),
         ]),
         m(SelectInput, {
           className: "model-select",
