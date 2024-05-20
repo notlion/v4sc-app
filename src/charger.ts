@@ -5,10 +5,13 @@ const readCharacteristicId = 0xffe2;
 const writeCharacteristicId = 0xffe3;
 
 const writeRefreshBytes = [0x02, 0x06, 0x06];
+const writeRequestSetpointBytes = [0x02, 0x05, 0x05];
+const writeRequestStatusBytes = [0x02, 0x06, 0x06];
 const writeOutputVoltageBytes = [0x06, 0x07];
 const writeOutputCurrentBytes = [0x06, 0x08];
 const writeOutputDisabledBytes = [0x06, 0x0c];
 
+const setpointUpdateCode = 0x0565;
 const statusUpdateCode = 0x0630;
 const setOutputVoltageResponseCode = 0x0703;
 const setOutputVoltageErrorCode = 0x0700;
@@ -35,8 +38,15 @@ export interface ChargerStatus {
   temperature2: number;
 }
 
+export interface ChargerSetpoint {
+  voltage: number;
+  current: number;
+}
+
 export class Charger {
   status: ChargerStatus[];
+
+  setpoint?: ChargerSetpoint;
 
   device?: BluetoothDevice;
   writeCharacteristic?: BluetoothRemoteGATTCharacteristic;
@@ -67,6 +77,9 @@ export class Charger {
           this.onReadCharacteristicChanged();
         });
         this.readCharacteristic.startNotifications();
+      }
+      if (this.writeCharacteristic) {
+        this.writeCharacteristic.writeValue(new Uint8Array(writeRequestSetpointBytes));
       }
       this.pollInterval = setInterval(() => this.onPollInterval(), 2000);
     }
@@ -146,6 +159,12 @@ export class Charger {
         currentLimitingPoint: value.getFloat32(30, true),
         efficiency: value.getFloat32(34, true),
       });
+    } else if (code === setpointUpdateCode) {
+      this.setpoint = {
+        voltage: value.getFloat32(2, true),
+        current: value.getFloat32(6, true),
+      };
+      // console.log("Not sure what else is in here", value);
     } else if (code === setOutputVoltageResponseCode) {
       const subCode = value.getUint16(2, true);
       if (subCode === setOutputVoltageSuccessCode) {
@@ -166,6 +185,7 @@ export class Charger {
   private onPollInterval() {
     if (!this.writeCharacteristic) return;
     this.writeCharacteristic.writeValue(new Uint8Array(writeRefreshBytes));
+    this.writeCharacteristic.writeValue(new Uint8Array(writeRequestStatusBytes));
   }
 }
 
