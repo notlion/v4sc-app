@@ -3,6 +3,7 @@ import m from "mithril";
 import { Charger, ChargerStatus } from "./charger";
 import { SelectInput } from "./select";
 import "./style.css";
+import vers from "./git-version.json";
 
 interface Model {
   name: string;
@@ -71,7 +72,7 @@ const StatusRow: m.Component<StatusRowAttrs> = {
 const MainComponent: m.Component = {
   view() {
     return [
-      m("h1", "V4SC Charge Control (", m("a", { href: "http://github.com/notlion/v4sc-app" }, "github",")")),
+      m("h1", "V4SC Charge Control"),
       true && [
         m(".status", [
           m(StatusRow, {
@@ -186,6 +187,9 @@ const MainComponent: m.Component = {
         charger.isConnected() ? "Disconnect" : "Connect"
       ),
       navigator.bluetooth ? "" : (m("p", "Web Bluetooth not available, try Chrome or ", m("a", { href: "https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055" }, "Bluefy"))),
+      m("footer", "Open source on ", m("a", { href: "http://github.com/notlion/v4sc-app" }, "github"),
+        " Version ", vers,
+      ),
     ];
   },
 };
