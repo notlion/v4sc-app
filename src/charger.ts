@@ -4,7 +4,6 @@ const serviceId = 0xffe1;
 const readCharacteristicId = 0xffe2;
 const writeCharacteristicId = 0xffe3;
 
-const writeRefreshBytes = [0x02, 0x06, 0x06];
 const writeRequestSetpointBytes = [0x02, 0x05, 0x05];
 const writeRequestStatusBytes = [0x02, 0x06, 0x06];
 const writeOutputVoltageBytes = [0x06, 0x07];
@@ -46,7 +45,7 @@ export interface ChargerSetpoint {
 export class Charger {
   status: ChargerStatus[];
 
-  setpoint?: ChargerSetpoint;
+  setpoint: ChargerSetpoint;
 
   device?: BluetoothDevice;
   writeCharacteristic?: BluetoothRemoteGATTCharacteristic;
@@ -56,6 +55,7 @@ export class Charger {
 
   constructor() {
     this.status = [];
+    this.setpoint = { voltage: 0, current: 0 };
   }
 
   async connect() {
@@ -108,6 +108,7 @@ export class Charger {
   }
 
   async setOutputVoltage(dcVoltage: number) {
+    this.setpoint.voltage = dcVoltage;
     if (!this.writeCharacteristic) return;
     const array = new Uint8Array(7);
     const view = new DataView(array.buffer);
@@ -119,6 +120,7 @@ export class Charger {
   }
 
   async setOutputCurrent(dcCurrent: number) {
+    this.setpoint.current = dcCurrent;
     if (!this.writeCharacteristic) return;
     const array = new Uint8Array(7);
     const view = new DataView(array.buffer);
@@ -184,7 +186,6 @@ export class Charger {
 
   private onPollInterval() {
     if (!this.writeCharacteristic) return;
-    this.writeCharacteristic.writeValue(new Uint8Array(writeRefreshBytes));
     this.writeCharacteristic.writeValue(new Uint8Array(writeRequestStatusBytes));
   }
 }

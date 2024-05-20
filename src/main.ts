@@ -11,6 +11,11 @@ interface Model {
 }
 const models: Model[] = [
   {
+    name: "Off",
+    voltage: 0,
+    current: 0,
+  },
+  {
     name: "LeaperKim Lynx (Max)",
     voltage: 151.2,
     current: 18,
@@ -25,19 +30,22 @@ const models: Model[] = [
     voltage: 134.4,
     current: 10,
   },
-  {
-    name: "Off",
-    voltage: 0,
-    current: 0,
-  },
 ];
-let selectedModel: Model | undefined;
+
+const cloneModel = (model: Model): Model => {
+  return {
+    name: "Custom",
+    voltage: model.voltage,
+    current: model.current,
+  };
+};
+let currentModel = cloneModel(models[0]);
 
 const charger = new Charger();
 (window as any).charger = charger;
 
 const onChangeModel = async (model: Model) => {
-  selectedModel = model;
+  currentModel = model;
   if (model.voltage === 0 || model.current === 0) {
     charger.setOutputEnabled(false);
   } else {
@@ -124,9 +132,25 @@ const MainComponent: m.Component = {
         m(SelectInput, {
           className: "model-select",
           options: models.map((m) => m.name),
-          selected: selectedModel?.name,
+          selected: currentModel?.name,
           onChange: (index: number) => {
             onChangeModel(models[index]);
+          },
+        }),
+        m(NumberInput, {
+          value: charger.setpoint.voltage,
+          onChange: (voltage: number) => {
+            currentModel = cloneModel(currentModel);
+            currentModel.voltage = voltage;
+            charger.setOutputVoltage(currentModel.voltage);
+          },
+        }),
+        m(NumberInput, {
+          value: charger.setpoint.current,
+          onChange: (current: number) => {
+            currentModel = cloneModel(currentModel);
+            currentModel.current = current;
+            charger.setOutputCurrent(current);
           },
         }),
       ],
@@ -146,6 +170,40 @@ const MainComponent: m.Component = {
         charger.isConnected() ? "Disconnect" : "Connect"
       ),
     ];
+  },
+};
+
+interface NumberInputAttrs {
+  value: number;
+  onChange: (value: number) => void;
+}
+const NumberInput: m.Component<NumberInputAttrs> = {
+  view() {
+    return m("input[type=number]", { spellcheck: false });
+  },
+  oncreate(vnode) {
+    const elem = vnode.dom;
+    if (elem instanceof HTMLInputElement) {
+      elem.value = vnode.attrs.value.toFixed(1);
+      elem.addEventListener("blur", () => {
+        vnode.attrs.onChange(Number(elem.value));
+        m.redraw();
+      });
+      elem.addEventListener("keydown", (event: KeyboardEvent) => {
+        if (event.code == "Enter") {
+          event.preventDefault();
+          elem.blur();
+        }
+      });
+    }
+  },
+  onupdate(vnode) {
+    const elem = vnode.dom;
+    if (elem instanceof HTMLInputElement) {
+      if (elem !== document.activeElement) {
+        elem.value = vnode.attrs.value.toFixed(1);
+      }
+    }
   },
 };
 
