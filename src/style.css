@@ -29,6 +29,12 @@ select {
   }
 }
 
+h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 4px;
+}
+
 button {
   padding: 10px 16px;
 }
@@ -40,6 +46,7 @@ select {
 #app {
   padding: 20px;
   min-width: 240px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 20px;

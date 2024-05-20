@@ -71,7 +71,8 @@ const StatusRow: m.Component<StatusRowAttrs> = {
 const MainComponent: m.Component = {
   view() {
     return [
-      charger.isConnected() && [
+      m("h1", "V4SC Charge Control (", m("a", { href: "http://github.com/notlion/v4sc-app" }, "github",")")),
+      true && [
         m(".status", [
           m(StatusRow, {
             name: "AC Input Voltage",
@@ -184,6 +185,7 @@ const MainComponent: m.Component = {
         },
         charger.isConnected() ? "Disconnect" : "Connect"
       ),
+      navigator.bluetooth ? "" : (m("p", "Web Bluetooth not available, try Chrome or ", m("a", { href: "https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055" }, "Bluefy"))),
     ];
   },
 };
