@@ -53,6 +53,8 @@ export class Charger {
 
   pollInterval?: number;
 
+  cellCount?: number;
+
   constructor() {
     this.status = [];
     this.setpoint = { voltage: 0, current: 0 };
@@ -105,6 +107,63 @@ export class Charger {
   currentStatus() {
     if (this.status.length < 1) return;
     return this.status[this.status.length - 1];
+  }
+
+  getCellCount() {
+    // lazy load cell count
+    if (this.cellCount === undefined) {
+      // get charger v setpoint
+      if (!this.setpoint) return;
+      let unrounded = this.setpoint.voltage / 4.24; //a little higher to be safe
+      if (unrounded % 1 >= 0.5) {
+        this.cellCount = Math.ceil(unrounded);
+        console.log("Cell count estimated", this.cellCount);
+      } else console.log("Cell count ambiguous", unrounded, this.setpoint.voltage);
+    }
+    return this.cellCount;
+  }
+
+  static getChargeCurve() {
+    return [
+      [4.15, 100], // Starting voltage at 100% charge
+      [4.07, 95],
+      [4.04, 90],
+      [3.99, 80],
+      [3.87, 70],
+      [3.79, 60],
+      [3.70, 50],
+      [3.61, 40],
+      [3.54, 30],
+      [3.44, 20],
+      [3.33, 10],
+      [3.15, 5],
+      [3.00, 0]
+    ];
+  }
+
+  static getSOCFromVoltage(voltage: number) {
+    const chargeCurve = Charger.getChargeCurve();
+    //interpolate between points in charge curve
+    let upperPoint = chargeCurve[0];
+    if (voltage > upperPoint[0]) return upperPoint[1];
+    for (let i = 1; i < chargeCurve.length; i++) {
+      const lowerPoint = chargeCurve[i];
+      if (voltage > lowerPoint[0]) {
+        const percent = (voltage - lowerPoint[0]) / (upperPoint[0] - lowerPoint[0]);
+        return lowerPoint[1] + percent * (upperPoint[1] - lowerPoint[1]);
+      }
+      upperPoint = lowerPoint;
+    }
+  }
+
+  getStateOfCharge() {
+    const cellCount = this.getCellCount();
+    const status = this.currentStatus();
+    if (!cellCount || !status) return;
+    //estimate internal impedance of battery based on Samsung 50S datasheet and cell count
+    const internalResistance = 0.02 * cellCount;
+    const compensatedV = status.dcOutputVoltage - status.dcOutputCurrent * internalResistance;
+    return Charger.getSOCFromVoltage(compensatedV);
   }
 
   async setOutputVoltage(dcVoltage: number) {
