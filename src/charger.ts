@@ -167,9 +167,9 @@ export class Charger {
     const status = this.currentStatus();
     if (!cellCount || !status) return;
     //estimate internal impedance of battery based on Samsung 50S datasheet and cell count
-    const internalResistance = 0.02 * cellCount;
+    const internalResistance = (0.02 * cellCount) / 4; //most packs have 4P
     const compensatedV = status.dcOutputVoltage - status.dcOutputCurrent * internalResistance;
-    return Charger.getSOCFromVoltage(compensatedV);
+    return Charger.getSOCFromVoltage(compensatedV / cellCount);
   }
 
   async setOutputVoltage(dcVoltage: number) {
