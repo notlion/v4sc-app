@@ -141,7 +141,7 @@ const MainComponent: m.Component = {
           m(StatusRow, {
             name: "Rest Cell Voltage",
             value: () => charger.getRestCellV() ?? 0,
-            display: (value: number) => value.toFixed(0),
+            display: (value: number) => value.toFixed(2) + "v",
           }),
         ]),
         m(SelectInput, {
