@@ -162,14 +162,23 @@ export class Charger {
     }
   }
 
-  getStateOfCharge() {
+  getCellGroupInternalImpedance() {
+    //TODO add peturb and observe method (on interval) for internal impedance
+    return 0.022 / 4; //Samsung 50S datasheet, 4 cells in series
+  }
+
+  getRestCellV() {
     const cellCount = this.getCellCount();
     const status = this.currentStatus();
     if (!cellCount || !status) return;
-    //estimate internal impedance of battery based on Samsung 50S datasheet and cell count
-    const internalResistance = (0.02 * cellCount) / 4; //most packs have 4P
-    const compensatedV = status.dcOutputVoltage - status.dcOutputCurrent * internalResistance;
-    return Charger.getSOCFromVoltage(compensatedV / cellCount);
+    const ir = this.getCellGroupInternalImpedance();
+    return (status.dcOutputVoltage / cellCount) - status.dcOutputCurrent * ir;
+  }
+
+  getStateOfCharge() {
+    const restCellV = this.getRestCellV();
+    if (!restCellV) return;
+    return Charger.getSOCFromVoltage(restCellV);
   }
 
   async setOutputVoltage(dcVoltage: number) {

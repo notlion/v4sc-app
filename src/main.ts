@@ -138,6 +138,11 @@ const MainComponent: m.Component = {
             value: () => charger.getCellCount() ?? 0,
             display: (value: number) => value.toFixed(0),
           }),
+          m(StatusRow, {
+            name: "Rest Cell Voltage",
+            value: () => charger.getRestCellV() ?? 0,
+            display: (value: number) => value.toFixed(0),
+          }),
         ]),
         m(SelectInput, {
           className: "model-select",
