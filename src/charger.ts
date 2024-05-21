@@ -180,8 +180,9 @@ export class Charger {
 
   getSetpointSoc() {
     const voltage = this.setpoint.voltage;
-    if (!voltage) return;
-    return Charger.getSOCFromVoltage(voltage);
+    const cellCount = this.getCellCount();
+    if (!voltage || !cellCount) return;
+    return Charger.getSOCFromVoltage(voltage / cellCount);
   }
 
   getCellGroupInternalImpedance() {
