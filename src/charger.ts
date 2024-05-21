@@ -54,6 +54,7 @@ export class Charger {
   pollInterval?: number;
 
   cellCount?: number;
+  capacityEstimateWh: number = 2500;
 
   constructor() {
     this.status = [];
@@ -202,6 +203,26 @@ export class Charger {
     const restCellV = this.getRestCellV();
     if (!restCellV) return;
     return Charger.getSOCFromVoltage(restCellV);
+  }
+
+  getTimeEstimateSec(targetSOCIn: number | undefined = undefined) {
+    const soc = this.getStateOfCharge();
+    const status = this.currentStatus();
+    const targetSOC = targetSOCIn ?? this.getSetpointSoc();
+    if (!soc || !status || !targetSOC) return;
+    const power = status.dcOutputVoltage * status.dcOutputCurrent;
+    const time = ((targetSOC - soc)/100 * this.capacityEstimateWh) / power * 3600; //in seconds
+    console.log(`timeEst. ((${targetSOC}% - ${soc}%)/100 * ${this.capacityEstimateWh}Wh) / ${power}W = `);
+    console.log(`timeEst. ${Math.round(targetSOC - soc)/100 * this.capacityEstimateWh}Wh / ${power}W = ${Charger.timeStr(time)}`);
+    return time;
+  }
+
+  static timeStr(seconds: number) {
+    if (seconds >= Infinity)
+      return "∞";
+    if (seconds < 3600)
+      return (seconds / 60).toFixed() + "m";
+    return (seconds / 3600).toFixed(1) + "h";
   }
 
   async setOutputVoltage(dcVoltage: number) {

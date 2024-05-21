@@ -145,8 +145,13 @@ const MainComponent: m.Component = {
             value: () => charger.getRestCellV() ?? 0,
             display: (value: number) => value.toFixed(2) + "v",
           }),
+          m(StatusRow, {
+            name: "Time Estimate",
+            value: () => charger.getTimeEstimateSec() ?? 0,
+            display: (value: number) => Charger.timeStr(value),
+          }),
         ]),
-        m(".input-group", [
+          m(".input-group", [
           m("label", "Setpoint SOC"),
           m(NumberInput, {
             value: charger.getSetpointSoc() ?? 95,
