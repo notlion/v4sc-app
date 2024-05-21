@@ -218,7 +218,7 @@ interface NumberInputAttrs {
 }
 const NumberInput: m.Component<NumberInputAttrs> = {
   view() {
-    return m("input[type=number]", { spellcheck: false });
+    return m("input[type=number,inputmode=numeric]", { spellcheck: false });
   },
   oncreate(vnode) {
     const elem = vnode.dom;
