@@ -160,6 +160,28 @@ export class Charger {
       }
       upperPoint = lowerPoint;
     }
+    return upperPoint[1]; //minimum
+  }
+
+  static getVoltageForSoc(soc: number) {
+    const chargeCurve = Charger.getChargeCurve();
+    let upperPoint = chargeCurve[0];
+    if (soc >= upperPoint[1]) return upperPoint[0];
+    for (let i = 1; i < chargeCurve.length; i++) {
+      const lowerPoint = chargeCurve[i];
+      if (soc > lowerPoint[1]) {
+        const percent = (soc - lowerPoint[1]) / (upperPoint[1] - lowerPoint[1]);
+        return lowerPoint[0] + percent * (upperPoint[0] - lowerPoint[0]);
+      }
+      upperPoint = lowerPoint;
+    }
+    return upperPoint[0]; //minimum
+  }
+
+  getSetpointSoc() {
+    const voltage = this.setpoint.voltage;
+    if (!voltage) return;
+    return Charger.getSOCFromVoltage(voltage);
   }
 
   getCellGroupInternalImpedance() {

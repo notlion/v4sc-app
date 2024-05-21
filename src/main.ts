@@ -146,6 +146,19 @@ const MainComponent: m.Component = {
             display: (value: number) => value.toFixed(2) + "v",
           }),
         ]),
+        m(".input-group", [
+          m("label", "Setpoint SOC"),
+          m(NumberInput, {
+            value: charger.getSetpointSoc() ?? 95,
+            onChange: (soc: number) => {
+              const cellcount = charger.getCellCount();
+              if (!cellcount) return;
+              const vgoal = Charger.getVoltageForSoc(soc) * cellcount;
+              charger.setOutputVoltage(vgoal);
+              //update other number inputs
+            },
+          }),
+        ]),
         m(SelectInput, {
           className: "model-select",
           options: models.map((m) => m.name),
