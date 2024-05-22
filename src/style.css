@@ -1,15 +1,83 @@
 :root {
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif,
     Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
-  line-height: 1.5;
+  line-height: normal;
   font-weight: 400;
 }
 
 body {
   margin: 0;
-  display: flex;
-  flex-direction: column;
 }
+
+header {
+  width: 100%;
+  border-bottom: 1px solid #b6b6b6;
+  padding: 0;
+  margin: 0 auto;
+  text-align: center;
+}
+h1 {
+  width: 350px;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 2px auto;
+  text-align: left;
+}
+
+#app {
+  width: 350px;
+  margin: 20px auto;
+}
+
+
+button {
+  padding: 10px 16px;
+}
+
+select {
+  padding: 10px 16px;
+}
+
+.val {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+}
+
+/* enormous primary value */
+h2, h3 {
+  font-size: 100px;
+  margin: 0 auto;
+  line-height: 0.7;
+}
+h2 .val, h3 .val, h4 .val { text-align: center; }
+
+/* secondary value, full width, smaller, has - value - ticks and subheading */
+h3 {
+  border-bottom: 1px solid #cecece;
+  width: 80%;
+  padding-bottom: 4px;
+  font-size: 50px;
+}
+h3 .val::before, h3 .val::after {
+  content: " - ";
+  color: #cecece;
+  font-weight: 100;
+}
+h3 .sub { font-size: 12px; text-align: center; }
+
+/* third sized values & sub-values */
+h4 {
+  font-size: 30px;
+  margin: 8px auto;
+  display: inline-block;
+  width: 50%;
+}
+h4 .sub { font-size: 16px; text-align: center; }
+
+/* input[type="number"] {
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  appearance: textfield;
+} */
 
 button,
 select {
@@ -29,41 +97,13 @@ select {
   }
 }
 
-h1 {
-  font-size: 24px;
-  font-weight: 600;
-  margin: 0 4px;
-}
-input[type="number"] {
-  -webkit-appearance: none;
-  -moz-appearance: textfield;
-  appearance: textfield;
-}
-
-button {
-  padding: 10px 16px;
-}
-
-select {
-  padding: 10px 16px;
-}
-
-#app {
-  padding: 20px;
-  min-width: 240px;
+footer {
+  font-size: 14px;
+  color: #666;
+  text-align: center;
   margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
 }
-
-.status {
-  display: grid;
-  grid-template-columns: auto auto;
-  gap: 4px 8px;
-}
-.status-value {
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-  font-size: 16px;
-  text-align: right;
+footer .sub {
+  font-size: 13px;
+  color: #999;
 }

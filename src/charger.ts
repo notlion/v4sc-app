@@ -110,6 +110,21 @@ export class Charger {
     return this.status[this.status.length - 1];
   }
 
+  static emptyStatus(): ChargerStatus {
+    return {
+      time: 0,
+      acInputVoltage: 0,
+      acInputCurrent: 0,
+      dcOutputVoltage: 0,
+      dcOutputCurrent: 0,
+      acInputFrequency: 0,
+      efficiency: 0,
+      currentLimitingPoint: 0,
+      temperature1: 0,
+      temperature2: 0,
+    };
+  }
+
   getCellCount() {
     const commonCellCounts = [20, 24, 30, 32, 36, 40];
     // lazy load cell count
@@ -205,7 +220,7 @@ export class Charger {
     return Charger.getSOCFromVoltage(restCellV);
   }
 
-  getTimeEstimateSec(targetSOCIn: number | undefined = undefined) {
+  getTimeEstimateSoc(targetSOCIn: number | undefined = undefined) {
     const soc = this.getStateOfCharge();
     const status = this.currentStatus();
     const targetSOC = targetSOCIn ?? this.getSetpointSoc();

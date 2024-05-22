@@ -1,7 +1,7 @@
 import m from "mithril";
 
-import { Charger, ChargerStatus } from "./charger";
 import { SelectInput } from "./select";
+import { Charger } from "./charger";
 import "./style.css";
 import vers from "./git-version.json";
 
@@ -56,139 +56,76 @@ const onChangeModel = async (model: Model) => {
   }
 };
 
-interface StatusRowAttrs {
-  name: string;
-  value: (status: ChargerStatus) => number;
-  display: (value: number) => string | number;
-}
-const StatusRow: m.Component<StatusRowAttrs> = {
-  view({ attrs: { name, value, display } }) {
-    const status = charger.currentStatus();
-    const displayValue = status && display(value(status));
-    return [m(".status-name", name), m(".status-value", displayValue ?? "∅")];
-  },
-};
-
 const MainComponent: m.Component = {
   view() {
+    const s = charger.currentStatus() ?? Charger.emptyStatus();
+    const soc = charger.getStateOfCharge();
+    const goalSOC = charger.getSetpointSoc();
+    const goalSOCShow = (!goalSOC || goalSOC > 90)? 90 : goalSOC;
+    const timeEst = charger.getTimeEstimateSoc(goalSOCShow);
+    const restCellV = charger.getRestCellV() ?? 0;
+    const cellCount = charger.getCellCount() ?? 0;
     return [
-      m("h1", "V4SC Charge Control"),
-      true && [
-        m(".status", [
-          m(StatusRow, {
-            name: "AC Input Voltage",
-            value: (status: ChargerStatus) => status.acInputVoltage,
-            display: (value: number) => value.toFixed(1) + "v",
-          }),
-          m(StatusRow, {
-            name: "AC Input Current",
-            value: (status: ChargerStatus) => status.acInputCurrent,
-            display: (value: number) => value.toFixed(1) + "a",
-          }),
-          m(StatusRow, {
-            name: "AC Input Power",
-            value: (status: ChargerStatus) => status.acInputVoltage * status.acInputCurrent,
-            display: (value: number) => value.toFixed(1) + "w",
-          }),
-          m(StatusRow, {
-            name: "AC Input Frequency",
-            value: (status: ChargerStatus) => status.acInputFrequency,
-            display: (value: number) => value.toFixed(1) + "hz",
-          }),
-          m(StatusRow, {
-            name: "DC Output Voltage",
-            value: (status: ChargerStatus) => status.dcOutputVoltage,
-            display: (value: number) => value.toFixed(1) + "v",
-          }),
-          m(StatusRow, {
-            name: "DC Output Current",
-            value: (status: ChargerStatus) => status.dcOutputCurrent,
-            display: (value: number) => value.toFixed(2) + "a",
-          }),
-          m(StatusRow, {
-            name: "DC Output Power",
-            value: (status: ChargerStatus) => status.dcOutputVoltage * status.dcOutputCurrent,
-            display: (value: number) => value.toFixed(1) + "w",
-          }),
-          m(StatusRow, {
-            name: "Temperature 1",
-            value: (status: ChargerStatus) => status.temperature1,
-            display: (value: number) => value.toFixed(0) + "°",
-          }),
-          m(StatusRow, {
-            name: "Temperature 2",
-            value: (status: ChargerStatus) => status.temperature2,
-            display: (value: number) => value.toFixed(0) + "°",
-          }),
-          m(StatusRow, {
-            name: "Efficiency",
-            value: (status: ChargerStatus) => status.efficiency,
-            display: (value: number) => value.toFixed(1) + "%",
-          }),
-          m(StatusRow, {
-            name: "Current Limiting Point",
-            value: (status: ChargerStatus) => status.currentLimitingPoint,
-            display: (value: number) => value.toFixed(1) + "%",
-          }),
-          m(StatusRow, {
-            name: "Charge Percent (Estimate)",
-            value: () => charger.getStateOfCharge() ?? 0,
-            display: (value: number) => value.toFixed(1) + "%",
-          }),
-          m(StatusRow, {
-            name: "Cell Count (Estimate)",
-            value: () => charger.getCellCount() ?? 0,
-            display: (value: number) => value.toFixed(0),
-          }),
-          m(StatusRow, {
-            name: "Rest Cell Voltage",
-            value: () => charger.getRestCellV() ?? 0,
-            display: (value: number) => value.toFixed(2) + "v",
-          }),
-          m(StatusRow, {
-            name: "Time Estimate",
-            value: () => charger.getTimeEstimateSec() ?? 0,
-            display: (value: number) => Charger.timeStr(value),
-          }),
+      m(".status", [
+        m("h2", [
+          m(".val", (soc? soc.toFixed(1) : "NA") + "%" ),
         ]),
-          m(".input-group", [
-          m("label", "Setpoint SOC"),
-          m(NumberInput, {
-            value: charger.getSetpointSoc() ?? 95,
-            onChange: (soc: number) => {
-              const cellcount = charger.getCellCount();
-              if (!cellcount) return;
-              const vgoal = Charger.getVoltageForSoc(soc) * cellcount;
-              charger.setOutputVoltage(vgoal);
-              //update other number inputs
-            },
-          }),
+        m("h3", [
+          m(".val", (timeEst? Charger.timeStr(timeEst) : "∞")),
+          m(".sub", ["until " + goalSOCShow + "%"]),
         ]),
-        m(SelectInput, {
-          className: "model-select",
-          options: models.map((m) => m.name),
-          selected: currentModel?.name,
-          onChange: (index: number) => {
-            onChangeModel(models[index]);
-          },
-        }),
+        m("h4", [
+          m(".val", s.dcOutputCurrent.toFixed(1) + "A"),
+          m(".val .sub", (s.dcOutputVoltage * s.dcOutputCurrent).toFixed(1) + "W"),
+        ]),
+        m("h4", [
+          m(".val", (Math.max(s.temperature1, s.temperature2)).toFixed(0) + "C"),
+          m(".val .sub", ("AC " + s.acInputVoltage.toFixed(0) + "V " + s.acInputCurrent.toFixed(1) + "A")),
+          // also could add s.acInputFrequency
+        ]),
+        m("h4", [
+          m(".val", (goalSOC ?? 0).toFixed(0) + "%"),
+          m(".sub", "setpoint"),
+        ]),
+        m("h4", [
+          m(".val", restCellV.toFixed(2) + "V"),
+          m(".val .sub", restCellV * cellCount + "V@rest " + cellCount + "S"),
+        ]),
+
+      ]),
+      m(".input-group", [
+        m("label", "Setpoint SOC"),
         m(NumberInput, {
-          value: charger.setpoint.voltage,
-          onChange: (voltage: number) => {
-            currentModel = cloneModel(currentModel);
-            currentModel.voltage = voltage;
-            charger.setOutputVoltage(currentModel.voltage);
+          value: charger.getSetpointSoc() ?? 95,
+          onChange: (soc: number) => {
+            const cellcount = charger.getCellCount();
+            if (!cellcount) return;
+            const vgoal = Charger.getVoltageForSoc(soc) * cellcount;
+            charger.setOutputVoltage(vgoal);
+            //update other number inputs
           },
         }),
-        m(NumberInput, {
-          value: charger.setpoint.current,
-          onChange: (current: number) => {
-            currentModel = cloneModel(currentModel);
-            currentModel.current = current;
-            charger.setOutputCurrent(current);
-          },
-        }),
-      ],
+      ]),
+      m(NumberInput, {
+        value: charger.setpoint.voltage,
+        onChange: (voltage: number) => {
+          charger.setOutputVoltage(voltage);
+        },
+      }),
+      m(NumberInput, {
+        value: charger.setpoint.current,
+        onChange: (current: number) => {
+          charger.setOutputCurrent(current);
+        },
+      }),
+      m(SelectInput, {
+        className: "model-select",
+        options: models.map((m) => m.name),
+        selected: currentModel?.name,
+        onChange: (index: number) => {
+          onChangeModel(models[index]);
+        },
+      }),
       m(
         "button",
         {
@@ -205,9 +142,10 @@ const MainComponent: m.Component = {
         charger.isConnected() ? "Disconnect" : "Connect"
       ),
       navigator.bluetooth ? "" : (m("p", "Web Bluetooth not available, try Chrome or ", m("a", { href: "https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055" }, "Bluefy"))),
-      m("footer", "Open source on ", m("a", { href: "http://github.com/notlion/v4sc-app" }, "github"),
-        " Version ", vers,
-      ),
+      m("footer", [
+        m("p", "Open source on ", m("a", { href: "http://github.com/notlion/v4sc-app" }, "github")),
+        m(".sub", "Version ", vers),
+      ]),
     ];
   },
 };
