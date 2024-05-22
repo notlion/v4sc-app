@@ -26,16 +26,7 @@ h1 {
 
 #app {
   width: 350px;
-  margin: 20px auto;
-}
-
-
-button {
-  padding: 10px 16px;
-}
-
-select {
-  padding: 10px 16px;
+  margin: 40px auto;
 }
 
 .val {
@@ -44,9 +35,9 @@ select {
 
 /* enormous primary value */
 h2, h3 {
-  font-size: 100px;
+  font-size: 140px;
   margin: 0 auto;
-  line-height: 0.7;
+  line-height: 0.9;
 }
 h2 .val, h3 .val, h4 .val { text-align: center; }
 
@@ -54,7 +45,7 @@ h2 .val, h3 .val, h4 .val { text-align: center; }
 h3 {
   border-bottom: 1px solid #cecece;
   width: 80%;
-  padding-bottom: 4px;
+  padding-bottom: 8px;
   font-size: 50px;
 }
 h3 .val::before, h3 .val::after {
@@ -62,26 +53,32 @@ h3 .val::before, h3 .val::after {
   color: #cecece;
   font-weight: 100;
 }
-h3 .sub { font-size: 12px; text-align: center; }
+h3 .sub { font-size: 14px; text-align: center; font-weight: 100; }
 
 /* third sized values & sub-values */
 h4 {
-  font-size: 30px;
-  margin: 8px auto;
+  font-size: 36px;
+  margin: 18px auto;
   display: inline-block;
   width: 50%;
 }
 h4 .sub { font-size: 16px; text-align: center; }
 
-/* input[type="number"] {
-  -webkit-appearance: none;
-  -moz-appearance: textfield;
-  appearance: textfield;
-} */
+.input-group {
+  text-align: right;
+}
+.input-group input, .input-group select {
+  margin: 4px 10px 4px;
+  padding: 3px;
+  font-size: 16px;
+  width: 150px;
+}
 
-button,
-select {
+button.connect {
   font-size: 18px;
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
   border: 0;
   border-radius: 8px;
   background-color: #eee;

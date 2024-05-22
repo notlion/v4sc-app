@@ -5,54 +5,46 @@ import { Charger } from "./charger";
 import "./style.css";
 import vers from "./git-version.json";
 
-interface Model {
+class Preset {
   name: string;
-  voltage: number;
+  soc: number;
   current: number;
+  constructor(name: string, soc: number, current: number) {
+    this.name = name;
+    this.soc = soc;
+    this.current = current;
+  }
+  getDesc() {
+    if (this.soc === 0 || this.current === 0)
+      return this.name;
+    return this.name + " " + this.current + "A " + this.soc + "%";
+  }
 }
-const models: Model[] = [
-  {
-    name: "Off",
-    voltage: 0,
-    current: 0,
-  },
-  {
-    name: "LeaperKim Lynx (Max)",
-    voltage: 151.2,
-    current: 18,
-  },
-  {
-    name: "LeaperKim Lynx (Casual)",
-    voltage: 4.15 * 36,
-    current: 5,
-  },
-  {
-    name: "Begode Master (Max)",
-    voltage: 134.4,
-    current: 10,
-  },
+
+const models: Preset[] = [
+  new Preset("", 0, 0),
+  new Preset("Off", 0, 0),
+  new Preset("Max", 100, 18),
+  new Preset("Casual", 90, 5),
+  new Preset("Storage", 60, 3),
 ];
 
-const cloneModel = (model: Model): Model => {
-  return {
-    name: "Custom",
-    voltage: model.voltage,
-    current: model.current,
-  };
-};
-let currentModel = cloneModel(models[0]);
+let currentModel: Preset | null = null;
 
 const charger = new Charger();
 (window as any).charger = charger;
 
-const onChangeModel = async (model: Model) => {
+const onChangeModel = async (model: Preset) => {
   currentModel = model;
-  if (model.voltage === 0 || model.current === 0) {
+  if (model.soc === 0 || model.current === 0) {
     charger.setOutputEnabled(false);
   } else {
-    await charger.setOutputEnabled(true);
-    await charger.setOutputVoltage(model.voltage);
-    await charger.setOutputCurrent(model.current);
+    const vgoal = Charger.getVoltageForSoc(model.soc) * (charger.getCellCount() ?? 0);
+    if (vgoal > 0) {
+      await charger.setOutputEnabled(true);
+      await charger.setOutputVoltage(vgoal);
+      await charger.setOutputCurrent(model.current);
+    }
   }
 };
 
@@ -89,12 +81,12 @@ const MainComponent: m.Component = {
         ]),
         m("h4", [
           m(".val", restCellV.toFixed(2) + "V"),
-          m(".val .sub", restCellV * cellCount + "V@rest " + cellCount + "S"),
+          m(".val .sub", (restCellV * cellCount).toFixed(1) + "V@rest " + cellCount + "S"),
         ]),
 
       ]),
       m(".input-group", [
-        m("label", "Setpoint SOC"),
+        m("label", "Set Setpoint %"),
         m(NumberInput, {
           value: charger.getSetpointSoc() ?? 95,
           onChange: (soc: number) => {
@@ -106,28 +98,36 @@ const MainComponent: m.Component = {
           },
         }),
       ]),
-      m(NumberInput, {
-        value: charger.setpoint.voltage,
-        onChange: (voltage: number) => {
-          charger.setOutputVoltage(voltage);
-        },
-      }),
-      m(NumberInput, {
-        value: charger.setpoint.current,
-        onChange: (current: number) => {
-          charger.setOutputCurrent(current);
-        },
-      }),
-      m(SelectInput, {
-        className: "model-select",
-        options: models.map((m) => m.name),
-        selected: currentModel?.name,
-        onChange: (index: number) => {
-          onChangeModel(models[index]);
-        },
-      }),
-      m(
-        "button",
+      m(".input-group", [
+        m("label", "Set Voltage"),
+          m(NumberInput, {
+            value: charger.setpoint.voltage,
+            onChange: (voltage: number) => {
+              charger.setOutputVoltage(voltage);
+            },
+          }),
+      ]),
+      m(".input-group", [
+        m("label", "Set  Current"),
+          m(NumberInput, {
+            value: charger.setpoint.current,
+            onChange: (current: number) => {
+              charger.setOutputCurrent(current);
+            },
+          }),
+      ]),
+      m(".input-group", [
+        m("label", "Presets"),
+          m(SelectInput, {
+            className: "model-select",
+            options: models.map((m) => m.getDesc()),
+            selected: currentModel?.getDesc(),
+            onChange: (index: number) => {
+              onChangeModel(models[index]);
+            },
+          }),
+      ]),
+      m("button.connect",
         {
           onclick: async () => {
             if (charger.isConnected()) {
