@@ -227,9 +227,7 @@ export class Charger {
     if (!soc || !status || !targetSOC) return;
     const power = status.dcOutputVoltage * status.dcOutputCurrent;
     const time = ((targetSOC - soc)/100 * this.capacityEstimateWh) / power * 3600; //in seconds
-    console.log(`timeEst. ((${targetSOC}% - ${soc}%)/100 * ${this.capacityEstimateWh}Wh) / ${power}W = `);
-    console.log(`timeEst. ${Math.round(targetSOC - soc)/100 * this.capacityEstimateWh}Wh / ${power}W = ${Charger.timeStr(time)}`);
-    return time;
+    return Math.max(0, time);
   }
 
   static timeStr(seconds: number) {

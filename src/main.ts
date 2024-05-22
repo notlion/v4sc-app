@@ -14,10 +14,15 @@ class Preset {
     this.soc = soc;
     this.current = current;
   }
-  getDesc() {
+  getDesc(cellCount: number = 1) {
     if (this.soc === 0 || this.current === 0)
       return this.name;
-    return this.name + " " + this.current + "A " + this.soc + "%";
+    return [
+      this.name,
+      this.current + "A",
+      this.soc + "%",
+      (Charger.getVoltageForSoc(this.soc) * cellCount).toFixed(1) + "V",
+    ].join(" ");
   }
 }
 
@@ -71,7 +76,7 @@ const MainComponent: m.Component = {
           m(".val .sub", (s.dcOutputVoltage * s.dcOutputCurrent).toFixed(1) + "W"),
         ]),
         m("h4", [
-          m(".val", (Math.max(s.temperature1, s.temperature2)).toFixed(0) + "C"),
+          m(".val", (Math.max(s.temperature1, s.temperature2)).toFixed(0) + "ºC"),
           m(".val .sub", ("AC " + s.acInputVoltage.toFixed(0) + "V " + s.acInputCurrent.toFixed(1) + "A")),
           // also could add s.acInputFrequency
         ]),
@@ -90,9 +95,8 @@ const MainComponent: m.Component = {
         m(NumberInput, {
           value: charger.getSetpointSoc() ?? 95,
           onChange: (soc: number) => {
-            const cellcount = charger.getCellCount();
-            if (!cellcount) return;
-            const vgoal = Charger.getVoltageForSoc(soc) * cellcount;
+            if (!cellCount) return;
+            const vgoal = Charger.getVoltageForSoc(soc) * cellCount;
             charger.setOutputVoltage(vgoal);
             //update other number inputs
           },
@@ -120,8 +124,8 @@ const MainComponent: m.Component = {
         m("label", "Presets"),
           m(SelectInput, {
             className: "model-select",
-            options: models.map((m) => m.getDesc()),
-            selected: currentModel?.getDesc(),
+            options: models.map((m) => m.getDesc(charger.getCellCount() ?? 1)),
+            selected: currentModel?.getDesc(charger.getCellCount() ?? 1),
             onChange: (index: number) => {
               onChangeModel(models[index]);
             },
