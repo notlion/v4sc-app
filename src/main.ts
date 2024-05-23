@@ -62,10 +62,13 @@ const MainComponent: m.Component = {
     const timeEst = charger.getTimeEstimateSoc(goalSOCShow);
     const restCellV = charger.getRestCellV() ?? 0;
     const cellCount = charger.getCellCount() ?? 0;
+    const capacityAh = charger.getCapacityAh();
+    const socStr = ((soc? soc.toFixed(1) : "NA.0") + "%").split(".");
+
     return [
       m(".status", [
         m("h2", [
-          m(".val", (soc? soc.toFixed(1) : "NA") + "%" ),
+          m(".val", [socStr[0], m("span.small", "." + socStr[1]) ]),
         ]),
         m("h3", [
           m(".val", (timeEst? Charger.timeStr(timeEst) : "∞")),
@@ -75,10 +78,9 @@ const MainComponent: m.Component = {
           m(".val", s.dcOutputCurrent.toFixed(1) + "A"),
           m(".val .sub", (s.dcOutputVoltage * s.dcOutputCurrent).toFixed(1) + "W"),
         ]),
-        m("h4", [
-          m(".val", (Math.max(s.temperature1, s.temperature2)).toFixed(0) + "ºC"),
-          m(".val .sub", ("AC " + s.acInputVoltage.toFixed(0) + "V " + s.acInputCurrent.toFixed(1) + "A")),
-          // also could add s.acInputFrequency
+        m("h4", [ //c-rating
+          m(".val", capacityAh? (s.dcOutputCurrent / capacityAh).toFixed(1) + "C" : "0C"),
+          m(".sub", "c-rating of " + (capacityAh ?? 0) + "Ah"),
         ]),
         m("h4", [
           m(".val", (goalSOC ?? 0).toFixed(0) + "%"),
@@ -86,7 +88,16 @@ const MainComponent: m.Component = {
         ]),
         m("h4", [
           m(".val", restCellV.toFixed(2) + "V"),
-          m(".val .sub", (restCellV * cellCount).toFixed(1) + "V@rest " + cellCount + "S"),
+          m(".val .sub", "rest v/cell " + cellCount + "S"),
+        ]),
+        m("h4", [ //charger temp / AC status
+          m(".val", (Math.max(s.temperature1, s.temperature2)).toFixed(0) + "ºC"),
+          m(".val .sub", ("AC " + s.acInputVoltage.toFixed(0) + "V " + s.acInputCurrent.toFixed(1) + "A")),
+          // also could add s.acInputFrequency
+        ]),
+        m("h4", [
+          m(".val", (restCellV * cellCount).toFixed(1) + "V"),
+          m(".val .sub", "@ rest "),
         ]),
 
       ]),

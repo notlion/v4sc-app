@@ -54,7 +54,7 @@ export class Charger {
   pollInterval?: number;
 
   cellCount?: number;
-  capacityEstimateWh: number = 2500;
+  capacityEstimateWh: number = 2700;
 
   constructor() {
     this.status = [];
@@ -228,6 +228,12 @@ export class Charger {
     const power = status.dcOutputVoltage * status.dcOutputCurrent;
     const time = ((targetSOC - soc)/100 * this.capacityEstimateWh) / power * 3600; //in seconds
     return Math.max(0, time);
+  }
+
+  getCapacityAh() {
+    const cellCount = this.getCellCount();
+    if (!cellCount) return;
+    return this.capacityEstimateWh / Charger.getVoltageForSoc(50) / cellCount;
   }
 
   static timeStr(seconds: number) {

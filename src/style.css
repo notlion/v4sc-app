@@ -40,6 +40,7 @@ h2, h3 {
   line-height: 0.9;
 }
 h2 .val, h3 .val, h4 .val { text-align: center; }
+h2 .small { font-size: 30%; }
 
 /* secondary value, full width, smaller, has - value - ticks and subheading */
 h3 {
