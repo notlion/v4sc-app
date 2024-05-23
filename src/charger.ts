@@ -162,10 +162,9 @@ export class Charger {
     const chargeCurve = Charger.getChargeCurve();
     //interpolate between points in charge curve
     let upperPoint = chargeCurve[0];
-    if (voltage > upperPoint[0]) return upperPoint[1];
     for (let i = 1; i < chargeCurve.length; i++) {
       const lowerPoint = chargeCurve[i];
-      if (voltage > lowerPoint[0]) {
+      if (voltage > lowerPoint[0] || i === chargeCurve.length - 1) {
         const percent = (voltage - lowerPoint[0]) / (upperPoint[0] - lowerPoint[0]);
         return lowerPoint[1] + percent * (upperPoint[1] - lowerPoint[1]);
       }
@@ -177,10 +176,9 @@ export class Charger {
   static getVoltageForSoc(soc: number) {
     const chargeCurve = Charger.getChargeCurve();
     let upperPoint = chargeCurve[0];
-    if (soc >= upperPoint[1]) return upperPoint[0];
     for (let i = 1; i < chargeCurve.length; i++) {
       const lowerPoint = chargeCurve[i];
-      if (soc > lowerPoint[1]) {
+      if (soc > lowerPoint[1] || i === chargeCurve.length - 1) {
         const percent = (soc - lowerPoint[1]) / (upperPoint[1] - lowerPoint[1]);
         return lowerPoint[0] + percent * (upperPoint[0] - lowerPoint[0]);
       }
