@@ -17,9 +17,10 @@ class Preset {
   getDesc(cellCount: number = 1) {
     if (this.soc === 0 || this.current === 0)
       return this.name;
+    const cgoal = this.current != Infinity? this.current : charger.model?.maxcurrent ?? 10;
     return [
       this.name,
-      this.current.toFixed(0) + "A",
+      cgoal.toFixed(0) + "A",
       this.soc.toFixed(0) + "%",
       (Charger.getVoltageForSoc(this.soc) * cellCount).toFixed(1) + "V",
     ].join(" ");
@@ -28,7 +29,7 @@ class Preset {
 
 const presets: Preset[] = [
   new Preset("Off", 0, 0),
-  new Preset("Max", 100, 18),
+  new Preset("Max", 100, Infinity),
   new Preset("Casual", 90, 5),
   new Preset("Storage", 60, 3),
 ];
@@ -46,10 +47,11 @@ const onChangePreset = async (preset: Preset | null) => {
     charger.setOutputEnabled(false);
   } else {
     const vgoal = Charger.getVoltageForSoc(preset.soc) * (charger.getCellCount() ?? 0);
-    if (vgoal > 0) {
+    const cgoal = preset.current != Infinity? preset.current : charger.model?.maxcurrent ?? 0;
+    if (vgoal > 0 && cgoal > 0) {
       await charger.setOutputEnabled(true);
       await charger.setOutputVoltage(vgoal);
-      await charger.setOutputCurrent(preset.current);
+      await charger.setOutputCurrent(cgoal);
     }
   }
 };
@@ -102,7 +104,7 @@ const MainComponent: m.Component = {
         ]),
         m("h4", [
           m(".val", (goalSOC ?? 0).toFixed(0) + "%"),
-          m(".sub", "setpoint"),
+          m(".sub", "setpoint " + charger.setpoint.voltage.toFixed(1) + "V "),
         ]),
         m("h4", [
           m(".val", restCellV.toFixed(2) + "V"),
@@ -180,6 +182,7 @@ const MainComponent: m.Component = {
             onChange: (index: number) => {
               charger.model = (index >= 0)? charger.modelsDB.models[index] : undefined;
               charger.autoDetectedModel = false;
+              onChangePreset(currentPreset);
             },
           }),
       ]),
