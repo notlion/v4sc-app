@@ -26,7 +26,7 @@ class Preset {
   }
 }
 
-const models: Preset[] = [
+const presets: Preset[] = [
   new Preset("", 0, 0),
   new Preset("Off", 0, 0),
   new Preset("Max", 100, 18),
@@ -34,21 +34,21 @@ const models: Preset[] = [
   new Preset("Storage", 60, 3),
 ];
 
-let currentModel: Preset | null = null;
+let currentPreset: Preset | null = null;
 
 const charger = new Charger();
 (window as any).charger = charger;
 
-const onChangeModel = async (model: Preset) => {
-  currentModel = model;
-  if (model.soc === 0 || model.current === 0) {
+const onChangePreset = async (preset: Preset) => {
+  currentPreset = preset;
+  if (preset.soc === 0 || preset.current === 0) {
     charger.setOutputEnabled(false);
   } else {
-    const vgoal = Charger.getVoltageForSoc(model.soc) * (charger.getCellCount() ?? 0);
+    const vgoal = Charger.getVoltageForSoc(preset.soc) * (charger.getCellCount() ?? 0);
     if (vgoal > 0) {
       await charger.setOutputEnabled(true);
       await charger.setOutputVoltage(vgoal);
-      await charger.setOutputCurrent(model.current);
+      await charger.setOutputCurrent(preset.current);
     }
   }
 };
@@ -80,7 +80,7 @@ const MainComponent: m.Component = {
         ]),
         m("h4", [ //c-rating
           m(".val", capacityAh? (s.dcOutputCurrent / capacityAh).toFixed(1) + "C" : "0C"),
-          m(".sub", "c-rating of " + (capacityAh ?? 0) + "Ah"),
+          m(".sub", "c-rating of " + (capacityAh ?? 0).toFixed(1) + "Ah"),
         ]),
         m("h4", [
           m(".val", (goalSOC ?? 0).toFixed(0) + "%"),
@@ -135,10 +135,10 @@ const MainComponent: m.Component = {
         m("label", "Presets"),
           m(SelectInput, {
             className: "model-select",
-            options: models.map((m) => m.getDesc(charger.getCellCount() ?? 1)),
-            selected: currentModel?.getDesc(charger.getCellCount() ?? 1),
+            options: presets.map((m) => m.getDesc(charger.getCellCount() ?? 1)),
+            selected: currentPreset?.getDesc(charger.getCellCount() ?? 1),
             onChange: (index: number) => {
-              onChangeModel(models[index]);
+              onChangePreset(presets[index]);
             },
           }),
       ]),
