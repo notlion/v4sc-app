@@ -72,7 +72,7 @@ const MainComponent: m.Component = {
         ]),
         m("h3", [
           m(".val", (timeEst? Charger.timeStr(timeEst) : "∞")),
-          m(".sub", ["until " + goalSOCShow + "%"]),
+          m(".sub", ["until " + goalSOCShow.toFixed(0) + "%"]),
         ]),
         m("h4", [
           m(".val", s.dcOutputCurrent.toFixed(1) + "A"),
@@ -139,6 +139,19 @@ const MainComponent: m.Component = {
             selected: currentPreset?.getDesc(charger.getCellCount() ?? 1),
             onChange: (index: number) => {
               onChangePreset(presets[index]);
+            },
+          }),
+      ]),
+      m(".input-group", [
+        m("label", "Model" + (charger.autoDetectedModel? " (detected)" : "")),
+          m(SelectInput, {
+            className: "model-select",
+            options: charger.modelsDB.models.map((m) => m.name),
+            selected: charger.model?.name,
+            onChange: (index: number) => {
+              if (index < 0) return;
+              charger.model = charger.modelsDB.models[index];
+              charger.autoDetectedModel = false;
             },
           }),
       ]),

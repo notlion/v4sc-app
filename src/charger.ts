@@ -1,4 +1,5 @@
 import m from "mithril";
+import { WheelModel, ModelsDB } from "./wheelmodel";
 
 const serviceId = 0xffe1;
 const readCharacteristicId = 0xffe2;
@@ -53,8 +54,9 @@ export class Charger {
 
   pollInterval?: number;
 
-  cellCount?: number;
-  capacityEstimateWh: number = 2700;
+  modelsDB = new ModelsDB();
+  model?: WheelModel;
+  autoDetectedModel = false;
 
   constructor() {
     this.status = [];
@@ -126,28 +128,20 @@ export class Charger {
   }
 
   getCellCount() {
-    const commonCellCounts = [20, 24, 30, 32, 36, 40];
-    // lazy load cell count
-    if (this.cellCount === undefined) {
-      const setV = this.setpoint?.voltage;
-      const atV = this.currentStatus()?.dcOutputVoltage;
-      if (!this.setpoint || !setV || !atV) return;
-      for (const cellCount of commonCellCounts) {
-        const maxTargetV = cellCount * 4.24;
-        if (setV >= maxTargetV) continue;
-        const minTargetV = cellCount * 3.0;
-        if (atV < minTargetV) continue;
-        console.log("Cell count estimated", cellCount);
-        this.cellCount = cellCount;
-        break;
-      }
+    if (!this.model) {
+      const outV = this.currentStatus()?.dcOutputVoltage;
+      if (!outV) return;
+      this.model = this.modelsDB.detectModel(this.setpoint.voltage, outV);
+      this.autoDetectedModel = true;
+    } else {
+      return this.model.seriescells;
     }
-    return this.cellCount;
   }
 
   static getChargeCurve() {
     return [
-      [4.15, 100], // Starting voltage at 100% charge
+      [4.20, 100],
+      [4.15, 99],
       [4.07, 95],
       [4.04, 90],
       [3.99, 80],
@@ -201,17 +195,25 @@ export class Charger {
     return Charger.getSOCFromVoltage(voltage / cellCount);
   }
 
-  getCellGroupInternalImpedance() {
+  getTotalInternalImpedance() {
     //TODO add peturb and observe method (on interval) for internal impedance
-    return 0.022 / 4; //Samsung 50S datasheet, 4 cells in series
+    const model = this.model;
+    if (!model) return 0.022 / 4 * 36;
+    return model.totalOhms;
+  }
+
+  getRestV() {
+    const status = this.currentStatus();
+    if (!status) return;
+    const ir = this.getTotalInternalImpedance();
+    return (status.dcOutputVoltage - status.dcOutputCurrent * ir);
   }
 
   getRestCellV() {
     const cellCount = this.getCellCount();
-    const status = this.currentStatus();
-    if (!cellCount || !status) return;
-    const ir = this.getCellGroupInternalImpedance();
-    return (status.dcOutputVoltage / cellCount) - status.dcOutputCurrent * ir;
+    const restV = this.getRestV();
+    if (!cellCount || !restV) return;
+    return restV / cellCount;
   }
 
   getStateOfCharge() {
@@ -224,16 +226,18 @@ export class Charger {
     const soc = this.getStateOfCharge();
     const status = this.currentStatus();
     const targetSOC = targetSOCIn ?? this.getSetpointSoc();
-    if (!soc || !status || !targetSOC) return;
+    const capWh = this.model?.capacityWh;
+    if (!soc || !status || !targetSOC || !capWh) return;
     const power = status.dcOutputVoltage * status.dcOutputCurrent;
-    const time = ((targetSOC - soc)/100 * this.capacityEstimateWh) / power * 3600; //in seconds
+    const time = ((targetSOC - soc)/100 * capWh) / power * 3600; //in seconds
     return Math.max(0, time);
   }
 
   getCapacityAh() {
     const cellCount = this.getCellCount();
-    if (!cellCount) return;
-    return this.capacityEstimateWh / Charger.getVoltageForSoc(50) / cellCount;
+    const capWh = this.model?.capacityWh;
+    if (!cellCount || !capWh) return;
+    return capWh / Charger.getVoltageForSoc(50) / cellCount;
   }
 
   static timeStr(seconds: number) {
@@ -303,7 +307,8 @@ export class Charger {
         voltage: value.getFloat32(2, true),
         current: value.getFloat32(6, true),
       };
-      this.cellCount = undefined;
+      if (this.autoDetectedModel)
+        this.model = undefined;
       // console.log("Not sure what else is in here", value);
     } else if (code === setOutputVoltageResponseCode) {
       const subCode = value.getUint16(2, true);
