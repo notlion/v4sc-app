@@ -65,6 +65,12 @@ function updatePresets() {
   }
   currentPreset = userPreset;
 }
+function updateUserPreset(soc: number | undefined, current: number | undefined) {
+  if (!userPreset)
+    userPreset = new Preset("Custom", soc ?? 0, current ?? 0);
+  if (soc) userPreset.soc = soc;
+  if (current) userPreset.current = current;
+}
 
 const MainComponent: m.Component = {
   view() {
@@ -77,13 +83,12 @@ const MainComponent: m.Component = {
     const cellCount = charger.getCellCount() ?? 0;
     const capacityAh = charger.getCapacityAh();
     const socStr = ((soc? soc.toFixed(1) : "NA.0") + "%").split(".");
-    const presetsPlusCurrent = (userPreset)? [...presets, userPreset] : presets;
     if (!userPreset && soc) {
-      userPreset = new Preset("Custom", soc, charger.setpoint.current);
-      currentPreset = userPreset;
+      updateUserPreset(soc, charger.setpoint.current);
       updatePresets();
       console.log("user preset set", userPreset, "current", currentPreset);
     }
+    const presetsPlusCurrent = (userPreset)? [...presets, userPreset] : presets;
 
     return [
       m(".status", [
@@ -130,8 +135,7 @@ const MainComponent: m.Component = {
             if (!cellc) return;
             const vgoal = Charger.getVoltageForSoc(newsoc) * cellc;
             charger.setOutputVoltage(vgoal);
-            if (userPreset)
-              userPreset.soc = newsoc;
+            updateUserPreset(newsoc, charger.setpoint.current);
             updatePresets();
           },
         }),
@@ -144,8 +148,7 @@ const MainComponent: m.Component = {
               charger.setOutputVoltage(voltage);
               const cellc = charger.getCellCount();
               if (!cellc) return;
-              if (userPreset)
-                userPreset.soc = Charger.getSOCFromVoltage(voltage / cellc);
+              updateUserPreset(Charger.getSOCFromVoltage(voltage / cellc), charger.setpoint.current);
               updatePresets();
             },
           }),
@@ -156,8 +159,7 @@ const MainComponent: m.Component = {
             value: charger.setpoint.current,
             onChange: (current: number) => {
               charger.setOutputCurrent(current);
-              if (userPreset)
-                userPreset.current = current;
+              updateUserPreset(charger.getSetpointSoc(), current);
               updatePresets();
             },
           }),
