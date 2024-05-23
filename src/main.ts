@@ -19,8 +19,8 @@ class Preset {
       return this.name;
     return [
       this.name,
-      this.current + "A",
-      this.soc + "%",
+      this.current.toFixed(0) + "A",
+      this.soc.toFixed(0) + "%",
       (Charger.getVoltageForSoc(this.soc) * cellCount).toFixed(1) + "V",
     ].join(" ");
   }
@@ -34,6 +34,7 @@ const presets: Preset[] = [
 ];
 
 let currentPreset: Preset | null = null;
+let userPreset: Preset | null = null;
 
 const charger = new Charger();
 (window as any).charger = charger;
@@ -52,6 +53,16 @@ const onChangePreset = async (preset: Preset | null) => {
     }
   }
 };
+function updatePresets() {
+  const soc = charger.getSetpointSoc() ?? 0;
+  for (const p of presets) { // now find a preset that matches
+    if (Math.abs(p.soc - soc) < 1 && Math.abs(p.current - charger.setpoint.current) < 0.3) {
+      currentPreset = p;
+      return;
+    }
+  }
+  currentPreset = userPreset;
+}
 
 const MainComponent: m.Component = {
   view() {
@@ -64,6 +75,13 @@ const MainComponent: m.Component = {
     const cellCount = charger.getCellCount() ?? 0;
     const capacityAh = charger.getCapacityAh();
     const socStr = ((soc? soc.toFixed(1) : "NA.0") + "%").split(".");
+    const presetsPlusCurrent = (userPreset)? [...presets, userPreset] : presets;
+    if (!userPreset && soc) {
+      userPreset = new Preset("Custom", soc, charger.setpoint.current);
+      currentPreset = userPreset;
+      updatePresets();
+      console.log("user preset set", userPreset, "current", currentPreset);
+    }
 
     return [
       m(".status", [
@@ -105,11 +123,14 @@ const MainComponent: m.Component = {
         m("label", "Set Setpoint %"),
         m(NumberInput, {
           value: charger.getSetpointSoc() ?? 95,
-          onChange: (soc: number) => {
-            if (!cellCount) return;
-            const vgoal = Charger.getVoltageForSoc(soc) * cellCount;
+          onChange: (newsoc: number) => {
+            const cellc = charger.getCellCount();
+            if (!cellc) return;
+            const vgoal = Charger.getVoltageForSoc(newsoc) * cellc;
             charger.setOutputVoltage(vgoal);
-            currentPreset = null;
+            if (userPreset)
+              userPreset.soc = newsoc;
+            updatePresets();
           },
         }),
       ]),
@@ -119,7 +140,11 @@ const MainComponent: m.Component = {
             value: charger.setpoint.voltage,
             onChange: (voltage: number) => {
               charger.setOutputVoltage(voltage);
-              currentPreset = null;
+              const cellc = charger.getCellCount();
+              if (!cellc) return;
+              if (userPreset)
+                userPreset.soc = Charger.getSOCFromVoltage(voltage / cellc);
+              updatePresets();
             },
           }),
       ]),
@@ -129,7 +154,9 @@ const MainComponent: m.Component = {
             value: charger.setpoint.current,
             onChange: (current: number) => {
               charger.setOutputCurrent(current);
-              currentPreset = null;
+              if (userPreset)
+                userPreset.current = current;
+              updatePresets();
             },
           }),
       ]),
@@ -137,10 +164,10 @@ const MainComponent: m.Component = {
         m("label", "Presets"),
           m(SelectInput, {
             className: "model-select",
-            options: presets.map((m) => m.getDesc(charger.getCellCount() ?? 1)),
+            options: presetsPlusCurrent.map((m) => m.getDesc(charger.getCellCount() ?? 1)),
             selected: currentPreset?.getDesc(charger.getCellCount() ?? 1),
             onChange: (index: number) => {
-              onChangePreset(index >= 0? presets[index] : null);
+              onChangePreset(index >= 0? presetsPlusCurrent[index] : null);
             },
           }),
       ]),

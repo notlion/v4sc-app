@@ -130,12 +130,13 @@ export class Charger {
   getCellCount() {
     if (!this.model) {
       const outV = this.currentStatus()?.dcOutputVoltage;
-      if (!outV) return;
-      this.model = this.modelsDB.detectModel(this.setpoint.voltage, outV);
-      this.autoDetectedModel = true;
-    } else {
-      return this.model.seriescells;
+      if (outV) {
+        this.model = this.modelsDB.detectModel(this.setpoint.voltage, outV);
+        if (this.model)
+          this.autoDetectedModel = true;
+      }
     }
+    return this.model?.seriescells;
   }
 
   static getChargeCurve() {
