@@ -27,7 +27,6 @@ class Preset {
 }
 
 const presets: Preset[] = [
-  new Preset("", 0, 0),
   new Preset("Off", 0, 0),
   new Preset("Max", 100, 18),
   new Preset("Casual", 90, 5),
@@ -39,8 +38,9 @@ let currentPreset: Preset | null = null;
 const charger = new Charger();
 (window as any).charger = charger;
 
-const onChangePreset = async (preset: Preset) => {
+const onChangePreset = async (preset: Preset | null) => {
   currentPreset = preset;
+  if (!preset) return;
   if (preset.soc === 0 || preset.current === 0) {
     charger.setOutputEnabled(false);
   } else {
@@ -109,7 +109,7 @@ const MainComponent: m.Component = {
             if (!cellCount) return;
             const vgoal = Charger.getVoltageForSoc(soc) * cellCount;
             charger.setOutputVoltage(vgoal);
-            //update other number inputs
+            currentPreset = null;
           },
         }),
       ]),
@@ -119,6 +119,7 @@ const MainComponent: m.Component = {
             value: charger.setpoint.voltage,
             onChange: (voltage: number) => {
               charger.setOutputVoltage(voltage);
+              currentPreset = null;
             },
           }),
       ]),
@@ -128,6 +129,7 @@ const MainComponent: m.Component = {
             value: charger.setpoint.current,
             onChange: (current: number) => {
               charger.setOutputCurrent(current);
+              currentPreset = null;
             },
           }),
       ]),
@@ -138,7 +140,7 @@ const MainComponent: m.Component = {
             options: presets.map((m) => m.getDesc(charger.getCellCount() ?? 1)),
             selected: currentPreset?.getDesc(charger.getCellCount() ?? 1),
             onChange: (index: number) => {
-              onChangePreset(presets[index]);
+              onChangePreset(index >= 0? presets[index] : null);
             },
           }),
       ]),
@@ -149,8 +151,7 @@ const MainComponent: m.Component = {
             options: charger.modelsDB.models.map((m) => m.name),
             selected: charger.model?.name,
             onChange: (index: number) => {
-              if (index < 0) return;
-              charger.model = charger.modelsDB.models[index];
+              charger.model = (index >= 0)? charger.modelsDB.models[index] : undefined;
               charger.autoDetectedModel = false;
             },
           }),
