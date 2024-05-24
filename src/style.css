@@ -77,9 +77,11 @@ h1 {
 
 .editable-value {
   outline: 0;
-  cursor: text;
   overflow: hidden;
   white-space: nowrap;
+}
+.editable-value:focus {
+  cursor: text;
 }
 
 /* enormous primary value */
@@ -127,7 +129,7 @@ h4 .sub {
   font-size: 16px;
   text-align: center;
 }
-*/ .input-group {
+.input-group {
   text-align: right;
 }
 .input-group input,

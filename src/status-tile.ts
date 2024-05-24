@@ -7,58 +7,9 @@ interface StatusTileAttrs {
   onChange?: (value: string) => void;
 }
 export const StatusTile: m.ClosureComponent<StatusTileAttrs> = () => {
-  let isEditing = false;
   let prevValue: string | undefined;
-  return {
-    view({ attrs: { editableValue, displayValue, subscript, onChange } }) {
-      const isEditable = onChange !== undefined;
-      return m(
-        ".status-tile",
-        {
-          className: isEditable ? "editable" : undefined,
-          onpointerdown: (event: PointerEvent) => {
-            if (isEditable && !isEditing) {
-              isEditing = true;
-              prevValue = editableValue;
-              event.preventDefault();
-            }
-          },
-        },
-        [
-          m(
-            ".status-tile-value",
-            isEditing && editableValue !== undefined
-              ? m(EditableValue, {
-                  value: editableValue.toString(),
-                  onChange: (value) => {
-                    isEditing = false;
-                    if (value !== prevValue) {
-                      onChange!(value);
-                    }
-                  },
-                })
-              : displayValue
-          ),
-          m(".status-tile-subscript", subscript),
-        ]
-      );
-    },
-  };
-};
-
-interface EditableValueAttrs {
-  value: string;
-  onChange: (value: string) => void;
-}
-const EditableValue: m.Component<EditableValueAttrs> = {
-  oncreate(vnode) {
-    const el = vnode.dom;
-    if (!(el instanceof HTMLElement)) return;
-
-    el.setAttribute("contenteditable", "true");
-    el.setAttribute("inputmode", "decimal");
-    el.spellcheck = false;
-
+  let editableValueElem: HTMLElement | undefined;
+  const focusAndSelectAll = (el: HTMLElement) => {
     el.focus();
 
     // Select all.
@@ -69,20 +20,55 @@ const EditableValue: m.Component<EditableValueAttrs> = {
       selection.removeAllRanges();
       selection.addRange(selectAllRange);
     }
+  };
+  return {
+    oncreate(vnode) {
+      const el = vnode.dom.querySelector(".editable-value");
+      if (!(el instanceof HTMLElement)) return;
 
-    const { onChange } = vnode.attrs;
-    el.addEventListener("blur", () => {
-      onChange(el.textContent ?? "");
-      m.redraw();
-    });
-    el.addEventListener("keydown", (event: KeyboardEvent) => {
-      if (event.code === "Enter") {
-        event.preventDefault();
-        el.blur();
+      editableValueElem = el;
+
+      el.setAttribute("contenteditable", "true");
+      el.setAttribute("inputmode", "decimal");
+      el.spellcheck = false;
+
+      const { onChange } = vnode.attrs;
+      if (onChange) {
+        el.addEventListener("blur", () => {
+          const value = el.textContent ?? "";
+          if (value === prevValue) return;
+          onChange(value);
+          m.redraw();
+        });
+        el.addEventListener("keydown", (event: KeyboardEvent) => {
+          if (event.code === "Enter") {
+            event.preventDefault();
+            el.blur();
+          }
+        });
       }
-    });
-  },
-  view({ attrs: { value } }) {
-    return m(".editable-value", value);
-  },
+    },
+    view({ attrs: { editableValue, displayValue, subscript, onChange } }) {
+      const isEditable = onChange !== undefined && editableValue !== undefined;
+      return m(
+        ".status-tile",
+        {
+          className: isEditable ? "editable" : undefined,
+          onpointerdown: (event: PointerEvent) => {
+            if (isEditable && document.activeElement !== editableValueElem) {
+              prevValue = editableValue;
+              if (editableValueElem) {
+                focusAndSelectAll(editableValueElem);
+              }
+              event.preventDefault();
+            }
+          },
+        },
+        [
+          m(".status-tile-value", isEditable ? m(".editable-value", editableValue) : displayValue),
+          m(".status-tile-subscript", subscript),
+        ]
+      );
+    },
+  };
 };
