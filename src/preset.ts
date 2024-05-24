@@ -11,15 +11,16 @@ export class Preset {
     this.current = current;
   }
 
-  static currentPreset: Preset | undefined = undefined;
   static userPreset: Preset = new Preset("Custom", 0, 0);
+  static currentPreset: Preset = Preset.userPreset;
 
-  isSet() { return this.soc !== 0 && this.current !== 0; }
+  isSet() {
+    return this.soc !== 0 && this.current !== 0;
+  }
   getDesc() {
     const cellCount = charger.getCellCount() ?? 1;
-    if (this.soc === 0 || this.current === 0)
-      return this.name;
-    const cgoal = this.current != Infinity? this.current : charger.model?.maxcurrent ?? 10;
+    if (this.soc === 0 || this.current === 0) return this.name;
+    const cgoal = this.current != Infinity ? this.current : charger.model?.maxcurrent ?? 10;
     return [
       this.name,
       cgoal.toFixed(0) + "A",
@@ -40,8 +41,7 @@ export class Preset {
     if (this.soc === 0 || this.current === 0) {
       charger.setOutputEnabled(false);
     } else {
-      if (!charger.isOutputEnabled())
-        charger.setOutputEnabled(true);
+      if (!charger.isOutputEnabled()) charger.setOutputEnabled(true);
       this.sendOutputVoltage();
       this.sendOutputCurrent();
     }
@@ -52,8 +52,7 @@ export class Preset {
     Preset.inferPreset();
   }
   setVoltage(newvoltage: number) {
-    if (newvoltage > 5)
-      newvoltage = newvoltage / (charger.getCellCount() ?? 1);
+    if (newvoltage > 5) newvoltage = newvoltage / (charger.getCellCount() ?? 1);
     this.soc = Charger.getSOCFromVoltage(newvoltage);
     this.sendOutputVoltage();
     Preset.inferPreset();
@@ -65,7 +64,8 @@ export class Preset {
   }
   static inferPreset() {
     const soc = charger.getSetpointSoc() ?? 0;
-    for (const p of presets) { // now find a preset that matches
+    for (const p of presets) {
+      // now find a preset that matches
       if (Math.abs(p.soc - soc) < 1 && Math.abs(p.current - charger.setpoint.current) < 0.3) {
         Preset.currentPreset = p;
         return;
@@ -75,7 +75,9 @@ export class Preset {
   }
 
   static getAllPresets() {
-    return (Preset.userPreset && Preset.userPreset.isSet())? [...presets, Preset.userPreset] : presets;
+    return Preset.userPreset && Preset.userPreset.isSet()
+      ? [...presets, Preset.userPreset]
+      : presets;
   }
 }
 

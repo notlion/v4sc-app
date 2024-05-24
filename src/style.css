@@ -2,6 +2,7 @@
   /* Default dark mode */
   --text-color: #fff;
   --background-color: #000;
+  --editable-tile-background-color: #222;
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif,
     Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
   line-height: normal;
@@ -19,15 +20,14 @@ body {
   color: var(--text-color);
   background-color: var(--background-color);
   margin: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
 }
 
-header {
-  width: 100%;
-  border-bottom: 1px solid #969696;
-  padding: 0;
-  margin: 0 auto;
-  text-align: center;
-}
 h1 {
   width: 350px;
   font-size: 14px;
@@ -37,36 +37,84 @@ h1 {
 }
 
 #app {
-  width: 350px;
-  margin: 40px auto;
+  width: 100%;
+  height: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
 }
 
-.val {
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+.status {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 8px;
+}
+.status-fullwidth {
+  grid-column: span 2;
+}
+.status-tile {
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 8px;
+  user-select: none;
+}
+.status-tile.editable {
+  cursor: pointer;
+  background-color: var(--editable-tile-background-color);
+}
+.status-tile-value {
+  text-align: center;
+  font-size: 36px;
+  font-weight: 600;
+}
+.status-tile-subscript {
+  text-align: center;
+  font-size: 14px;
+}
+
+.editable-value {
+  outline: 0;
+  cursor: text;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 /* enormous primary value */
-h2, h3 {
+h2,
+h3 {
   font-size: 140px;
   margin: 0 auto;
   line-height: 0.9;
 }
-h2 .val, h3 .val, h4 .val { text-align: center; }
-h2 .small { font-size: 30%; }
+h2 .val,
+h3 .val,
+h4 .val {
+  text-align: center;
+}
+h2 .small {
+  font-size: 30%;
+}
 
 /* secondary value, full width, smaller, has - value - ticks and subheading */
 h3 {
-  border-bottom: 1px solid #939393;
   width: 80%;
   padding-bottom: 8px;
   font-size: 50px;
 }
-h3 .val::before, h3 .val::after {
+h3 .val::before,
+h3 .val::after {
   content: " - ";
   color: #cecece;
   font-weight: 100;
 }
-h3 .sub { font-size: 14px; text-align: center; font-weight: 100; }
+h3 .sub {
+  font-size: 14px;
+  text-align: center;
+  font-weight: 100;
+}
 
 /* third sized values & sub-values */
 h4 {
@@ -75,19 +123,22 @@ h4 {
   display: inline-block;
   width: 50%;
 }
-h4 .sub { font-size: 16px; text-align: center; }
-
-.input-group {
+h4 .sub {
+  font-size: 16px;
+  text-align: center;
+}
+*/ .input-group {
   text-align: right;
 }
-.input-group input, .input-group select {
+.input-group input,
+.input-group select {
   margin: 4px 10px 4px;
   padding: 3px;
   font-size: 16px;
   width: 150px;
 }
 
-button.connect {
+button {
   font-size: 18px;
   width: 100%;
   padding: 10px;
