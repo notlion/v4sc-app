@@ -1,7 +1,8 @@
 :root {
   /* Default dark mode */
-  --text-color: #fff;
+  --text-color: rgba(255, 255, 255, 0.85);
   --background-color: #000;
+  --tile-background-color: #030303;
   --editable-tile-background-color: #222;
   --editable-tile-editing-background-color: #0c326e;
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif,
@@ -29,14 +30,6 @@ body {
   overflow: hidden;
 }
 
-h1 {
-  width: 350px;
-  font-size: 14px;
-  font-weight: 600;
-  margin: 2px auto;
-  text-align: left;
-}
-
 #app {
   width: 100%;
   height: 100%;
@@ -54,13 +47,35 @@ h1 {
 .status-fullwidth {
   grid-column: span 2;
 }
+.status-soc {
+  background-color: var(--tile-background-color);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 150px;
+}
+.status-soc-value {
+  font-size: 80px;
+  font-weight: 600;
+  line-height: 60px;
+}
+.status-soc-value .small {
+  font-size: 48px;
+}
 .status-tile {
-  border-radius: 10px;
+  background-color: var(--tile-background-color);
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding: 8px;
+  justify-content: center;
+  padding: 4px;
   user-select: none;
+  overflow: hidden;
+  height: 80px;
 }
 .status-tile.editable {
   cursor: pointer;
@@ -72,12 +87,13 @@ h1 {
 .status-tile-value {
   position: relative;
   text-align: center;
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 600;
 }
 .status-tile-subscript {
   text-align: center;
   font-size: 14px;
+  line-height: 24px;
 }
 
 .editable-value {
@@ -89,51 +105,6 @@ h1 {
   cursor: text;
 }
 
-/* enormous primary value */
-h2,
-h3 {
-  font-size: 140px;
-  margin: 0 auto;
-  line-height: 0.9;
-}
-h2 .val,
-h3 .val,
-h4 .val {
-  text-align: center;
-}
-h2 .small {
-  font-size: 30%;
-}
-
-/* secondary value, full width, smaller, has - value - ticks and subheading */
-h3 {
-  width: 80%;
-  padding-bottom: 8px;
-  font-size: 50px;
-}
-h3 .val::before,
-h3 .val::after {
-  content: " - ";
-  color: #cecece;
-  font-weight: 100;
-}
-h3 .sub {
-  font-size: 14px;
-  text-align: center;
-  font-weight: 100;
-}
-
-/* third sized values & sub-values */
-h4 {
-  font-size: 36px;
-  margin: 18px auto;
-  display: inline-block;
-  width: 50%;
-}
-h4 .sub {
-  font-size: 16px;
-  text-align: center;
-}
 .input-group {
   text-align: right;
 }
@@ -149,7 +120,7 @@ button {
   font-size: 18px;
   width: 100%;
   padding: 10px;
-  margin-top: 10px;
+  margin-top: 12px;
   border: 0;
   border-radius: 8px;
   background-color: #eee;

@@ -21,7 +21,7 @@ const MainComponent: m.Component = {
     const restCellV = charger.getRestCellV() ?? 0;
     const cellCount = charger.getCellCount() ?? 0;
     const capacityAh = charger.getCapacityAh();
-    const socStr = ((soc ? soc.toFixed(1) : "NA.0") + "%").split(".");
+
     if (!Preset.userPreset.isSet() && soc) {
       //first good charger data
       Preset.userPreset.soc = soc;
@@ -32,16 +32,24 @@ const MainComponent: m.Component = {
     const allPresets = Preset.getAllPresets();
     console.log("render selected", Preset.currentPreset);
 
+    const chargePercentageParts = ((soc ? soc.toFixed(1) : "0.0") + "%").split(".");
     const outputPowerDisplay = (status.dcOutputVoltage * status.dcOutputCurrent).toFixed(1) + "W";
     const cRating = capacityAh ? status.dcOutputCurrent / capacityAh : 0;
 
     return [
-      m("h2", [m(".val", [socStr[0], m("span.small", "." + socStr[1])])]),
-      m("h3", [
-        m(".val", timeEst ? Charger.timeStr(timeEst) : "∞"),
-        m(".sub", ["until " + goalSOCShow.toFixed(0) + "%"]),
-      ]),
       m(".status", [
+        m(".status-soc.status-fullwidth", [
+          m(".status-soc-value", [
+            chargePercentageParts[0],
+            m("span.small", "." + chargePercentageParts[1]),
+          ]),
+          m(
+            ".status-time-until-charged",
+            timeEst
+              ? [Charger.timeStr(timeEst), " until " + goalSOCShow.toFixed(0) + "%"]
+              : ["Over ", goalSOCShow.toFixed(0), "% charged"]
+          ),
+        ]),
         // Goal Charge Percentage
         m(StatusTile, {
           editableValue: (goalSOC ?? 0).toFixed(0),
