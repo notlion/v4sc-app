@@ -283,6 +283,11 @@ export class Charger {
     return this.writeCharacteristic.writeValue(array);
   }
 
+  isOutputEnabled() {
+    const status = this.currentStatus();
+    return status && status.dcOutputVoltage > 50;
+  }
+
   private onReadCharacteristicChanged() {
     if (!this.readCharacteristic?.value) return;
 
@@ -340,3 +345,7 @@ const checksum = (view: DataView, byteOffset: number, byteCount: number) => {
   }
   return sum;
 };
+
+
+export const charger = new Charger();
+

@@ -1,75 +1,18 @@
 import m from "mithril";
 
 import { SelectInput } from "./select";
-import { Charger } from "./charger";
+import { Charger, charger } from "./charger";
+import { Preset } from "./preset";
 import "./style.css";
 import vers from "./git-version.json";
 
-class Preset {
-  name: string;
-  soc: number;
-  current: number;
-  constructor(name: string, soc: number, current: number) {
-    this.name = name;
-    this.soc = soc;
-    this.current = current;
-  }
-  getDesc(cellCount: number = 1) {
-    if (this.soc === 0 || this.current === 0)
-      return this.name;
-    const cgoal = this.current != Infinity? this.current : charger.model?.maxcurrent ?? 10;
-    return [
-      this.name,
-      cgoal.toFixed(0) + "A",
-      this.soc.toFixed(0) + "%",
-      (Charger.getVoltageForSoc(this.soc) * cellCount).toFixed(1) + "V",
-    ].join(" ");
-  }
-}
-
-const presets: Preset[] = [
-  new Preset("Off", 0, 0),
-  new Preset("Max", 100, Infinity),
-  new Preset("Casual", 90, 5),
-  new Preset("Storage", 60, 3),
-];
-
-let currentPreset: Preset | null = null;
-let userPreset: Preset | null = null;
-
-const charger = new Charger();
 (window as any).charger = charger;
 
-const onChangePreset = async (preset: Preset | null) => {
-  currentPreset = preset;
-  if (!preset) return;
-  if (preset.soc === 0 || preset.current === 0) {
-    charger.setOutputEnabled(false);
-  } else {
-    const vgoal = Charger.getVoltageForSoc(preset.soc) * (charger.getCellCount() ?? 0);
-    const cgoal = preset.current != Infinity? preset.current : charger.model?.maxcurrent ?? 0;
-    if (vgoal > 0 && cgoal > 0) {
-      await charger.setOutputEnabled(true);
-      await charger.setOutputVoltage(vgoal);
-      await charger.setOutputCurrent(cgoal);
-    }
-  }
-};
-function updatePresets() {
-  const soc = charger.getSetpointSoc() ?? 0;
-  for (const p of presets) { // now find a preset that matches
-    if (Math.abs(p.soc - soc) < 1 && Math.abs(p.current - charger.setpoint.current) < 0.3) {
-      currentPreset = p;
-      return;
-    }
-  }
-  currentPreset = userPreset;
-}
-function updateUserPreset(soc: number | undefined, current: number | undefined) {
-  if (!userPreset)
-    userPreset = new Preset("Custom", soc ?? 0, current ?? 0);
-  if (soc) userPreset.soc = soc;
-  if (current) userPreset.current = current;
+function vChange(e: InputEvent, setter: (value: number) => void) {
+  const target = e.target as HTMLDivElement;
+  const value = parseFloat(target.textContent?.replace(/[^0-9.]/g, "") ?? "0");
+  console.log("value changed", target.textContent, value);
+  setter(value);
 }
 
 const MainComponent: m.Component = {
@@ -83,13 +26,14 @@ const MainComponent: m.Component = {
     const cellCount = charger.getCellCount() ?? 0;
     const capacityAh = charger.getCapacityAh();
     const socStr = ((soc? soc.toFixed(1) : "NA.0") + "%").split(".");
-    if (!userPreset && soc) {
-      updateUserPreset(soc, charger.setpoint.current);
-      updatePresets();
-      console.log("user preset set", userPreset, "current", currentPreset);
+    if (!Preset.userPreset.isSet() && soc) { //first good charger data
+      Preset.userPreset.soc = soc;
+      Preset.userPreset.current = charger.setpoint.current;
+      Preset.inferPreset();
+      console.log("user preset set", Preset.userPreset, "current", Preset.currentPreset);
     }
-    const presetsPlusCurrent = (userPreset)? [...presets, userPreset] : presets;
-
+    const allPresets = Preset.getAllPresets();
+    console.log("render selected", Preset.currentPreset);
     return [
       m(".status", [
         m("h2", [
@@ -100,7 +44,8 @@ const MainComponent: m.Component = {
           m(".sub", ["until " + goalSOCShow.toFixed(0) + "%"]),
         ]),
         m("h4", [
-          m(".val", s.dcOutputCurrent.toFixed(1) + "A"),
+          m(".val", { contenteditable: "true", onblur: (e: InputEvent) => vChange(e, (v) => Preset.userPreset.setCurrent(v)) },
+            m.trust(s.dcOutputCurrent.toFixed(1) + "A")),
           m(".val .sub", (s.dcOutputVoltage * s.dcOutputCurrent).toFixed(1) + "W"),
         ]),
         m("h4", [ //c-rating
@@ -108,8 +53,12 @@ const MainComponent: m.Component = {
           m(".sub", "c-rating of " + (capacityAh ?? 0).toFixed(1) + "Ah"),
         ]),
         m("h4", [
-          m(".val", (goalSOC ?? 0).toFixed(0) + "%"),
-          m(".sub", "setpoint " + charger.setpoint.voltage.toFixed(1) + "V "),
+          //bind to the blur and return press events
+          m(".val", { contenteditable: "true", onblur: (e: InputEvent) => vChange(e, (v) => Preset.userPreset.setSoc(v)) },
+            m.trust((goalSOC ?? 0).toFixed(0) + "%")),
+          m(".sub", ["setpoint ",
+            m("span", { contenteditable: "true", onblur: (e: InputEvent) => vChange(e, (v) => Preset.userPreset.setVoltage(v)) },
+              m.trust(charger.setpoint.voltage.toFixed(1) + "V "))]),
         ]),
         m("h4", [
           m(".val", restCellV.toFixed(2) + "V"),
@@ -124,54 +73,16 @@ const MainComponent: m.Component = {
           m(".val", (restCellV * cellCount).toFixed(1) + "V"),
           m(".val .sub", "@ rest "),
         ]),
-
-      ]),
-      m(".input-group", [
-        m("label", "Set Setpoint %"),
-        m(NumberInput, {
-          value: charger.getSetpointSoc() ?? 95,
-          onChange: (newsoc: number) => {
-            const cellc = charger.getCellCount();
-            if (!cellc) return;
-            const vgoal = Charger.getVoltageForSoc(newsoc) * cellc;
-            charger.setOutputVoltage(vgoal);
-            updateUserPreset(newsoc, charger.setpoint.current);
-            updatePresets();
-          },
-        }),
-      ]),
-      m(".input-group", [
-        m("label", "Set Voltage"),
-          m(NumberInput, {
-            value: charger.setpoint.voltage,
-            onChange: (voltage: number) => {
-              charger.setOutputVoltage(voltage);
-              const cellc = charger.getCellCount();
-              if (!cellc) return;
-              updateUserPreset(Charger.getSOCFromVoltage(voltage / cellc), charger.setpoint.current);
-              updatePresets();
-            },
-          }),
-      ]),
-      m(".input-group", [
-        m("label", "Set  Current"),
-          m(NumberInput, {
-            value: charger.setpoint.current,
-            onChange: (current: number) => {
-              charger.setOutputCurrent(current);
-              updateUserPreset(charger.getSetpointSoc(), current);
-              updatePresets();
-            },
-          }),
       ]),
       m(".input-group", [
         m("label", "Presets"),
           m(SelectInput, {
             className: "model-select",
-            options: presetsPlusCurrent.map((m) => m.getDesc(charger.getCellCount() ?? 1)),
-            selected: currentPreset?.getDesc(charger.getCellCount() ?? 1),
+            options: allPresets.map((m) => m.getDesc()),
+            selected: Preset.currentPreset?.getDesc(),
             onChange: (index: number) => {
-              onChangePreset(index >= 0? presetsPlusCurrent[index] : null);
+              Preset.currentPreset = (index >= 0)? allPresets[index] : undefined;
+              Preset.currentPreset?.sendOutput();
             },
           }),
       ]),
@@ -184,7 +95,7 @@ const MainComponent: m.Component = {
             onChange: (index: number) => {
               charger.model = (index >= 0)? charger.modelsDB.models[index] : undefined;
               charger.autoDetectedModel = false;
-              onChangePreset(currentPreset);
+              Preset.currentPreset?.sendOutput();
             },
           }),
       ]),
@@ -208,40 +119,6 @@ const MainComponent: m.Component = {
         m(".sub", "Version ", vers),
       ]),
     ];
-  },
-};
-
-interface NumberInputAttrs {
-  value: number;
-  onChange: (value: number) => void;
-}
-const NumberInput: m.Component<NumberInputAttrs> = {
-  view() {
-    return m("input[type=number,inputmode=numeric]", { spellcheck: false });
-  },
-  oncreate(vnode) {
-    const elem = vnode.dom;
-    if (elem instanceof HTMLInputElement) {
-      elem.value = vnode.attrs.value.toFixed(1);
-      elem.addEventListener("blur", () => {
-        vnode.attrs.onChange(Number(elem.value));
-        m.redraw();
-      });
-      elem.addEventListener("keydown", (event: KeyboardEvent) => {
-        if (event.code == "Enter") {
-          event.preventDefault();
-          elem.blur();
-        }
-      });
-    }
-  },
-  onupdate(vnode) {
-    const elem = vnode.dom;
-    if (elem instanceof HTMLInputElement) {
-      if (elem !== document.activeElement) {
-        elem.value = vnode.attrs.value.toFixed(1);
-      }
-    }
   },
 };
 
