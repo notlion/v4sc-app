@@ -59,11 +59,10 @@ const MainComponent: m.Component = {
         // Output Current
         m(StatusTile, {
           editableValue: currentPreset.current.toFixed(1),
-          displayValue: [
-            status.dcOutputCurrent > 0 && [status.dcOutputCurrent.toFixed(1), "/"],
-            currentPreset.current.toFixed(1),
-            "A",
-          ],
+          displayValue:
+            status.dcOutputCurrent > 0
+              ? status.dcOutputCurrent.toFixed(1) + "/" + currentPreset.current.toFixed(1) + "A"
+              : currentPreset.current.toFixed(1) + "A",
           subscript: outputPowerDisplay,
           onChange: (valueStr) => {
             const value = Number(valueStr);
@@ -79,7 +78,7 @@ const MainComponent: m.Component = {
         }),
         // Resting Cell Voltage
         m(StatusTile, {
-          displayValue: [restCellV.toFixed(2), "V"],
+          displayValue: restCellV.toFixed(2) + "V",
           subscript: "rest v/cell " + cellCount + "S",
         }),
         // Temperature

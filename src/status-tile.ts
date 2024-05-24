@@ -2,7 +2,7 @@ import m from "mithril";
 
 interface StatusTileAttrs {
   editableValue?: string;
-  displayValue: m.Children;
+  displayValue: string;
   subscript: m.Children;
   onChange?: (value: string) => void;
 }
@@ -38,6 +38,7 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = () => {
           m.redraw();
           const value = el.textContent ?? "";
           if (value !== prevValue) onChange(value);
+          el.textContent = vnode.attrs.displayValue;
         });
         el.addEventListener("keydown", (event: KeyboardEvent) => {
           if (event.code === "Enter") {
@@ -58,6 +59,7 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = () => {
             if (isEditable && !isEditing) {
               prevValue = editableValue;
               if (editableValueElem) {
+                editableValueElem.textContent = editableValue;
                 focusAndSelectAll(editableValueElem);
               }
               event.preventDefault();
@@ -65,10 +67,7 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = () => {
           },
         },
         [
-          m(".status-tile-value", [
-            m(".display-value", displayValue),
-            isEditable && m(".editable-value", editableValue),
-          ]),
+          m(".status-tile-value", [isEditable ? m(".editable-value", displayValue) : displayValue]),
           m(".status-tile-subscript", subscript),
         ]
       );
