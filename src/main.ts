@@ -35,19 +35,25 @@ const MainComponent: m.Component = {
     const chargePercentageParts = ((soc ? soc.toFixed(1) : "0.0") + "%").split(".");
     const outputPowerDisplay = (status.dcOutputVoltage * status.dcOutputCurrent).toFixed(1) + "W";
     const cRating = capacityAh ? status.dcOutputCurrent / capacityAh : 0;
+    const isCharging = status.dcOutputCurrent > 0;
 
     return [
       m(".status", [
+        // Charge Percentage
         m(".status-soc.status-fullwidth", [
           m(".status-soc-value", [
             chargePercentageParts[0],
             m("span.small", "." + chargePercentageParts[1]),
           ]),
           m(
-            ".status-time-until-charged",
-            timeEst
-              ? [Charger.timeStr(timeEst), " until " + goalSOCShow.toFixed(0) + "%"]
-              : ["Over ", goalSOCShow.toFixed(0), "% charged"]
+            ".status-soc-subscript",
+            charger.isConnected()
+              ? isCharging
+                ? timeEst
+                  ? [Charger.timeStr(timeEst), " until ", goalSOCShow.toFixed(0), "%"]
+                  : ["Over ", goalSOCShow.toFixed(0), "% charged"]
+                : "Not charging"
+              : "Not connected"
           ),
         ]),
         // Goal Charge Percentage
