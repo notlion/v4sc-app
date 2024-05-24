@@ -120,7 +120,7 @@ const MainComponent: m.Component = {
 
         m(".status-fullwidth", [
           m(".input-group", [
-            m("label", "Presets"),
+            m("label", "Preset"),
             m(SelectInput, {
               options: allPresets.map((m) => m.getDesc()),
               selected: Preset.currentPreset ? Preset.currentPreset.getDesc() : undefined,
