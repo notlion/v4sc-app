@@ -6,9 +6,10 @@ interface StatusTileAttrs {
   subscript: m.Children;
   onChange?: (value: string) => void;
 }
-export const StatusTile: m.ClosureComponent<StatusTileAttrs> = () => {
+export const StatusTile: m.ClosureComponent<StatusTileAttrs> = (initialVnode) => {
   let prevValue: string | undefined;
   let editableValueElem: HTMLElement | undefined;
+  let latestVnode = initialVnode;
   const focusAndSelectAll = (el: HTMLElement) => {
     el.focus();
 
@@ -20,6 +21,9 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = () => {
       selection.removeAllRanges();
       selection.addRange(selectAllRange);
     }
+  };
+  const isEditing = () => {
+    return document.activeElement === editableValueElem;
   };
   return {
     oncreate(vnode) {
@@ -38,7 +42,7 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = () => {
           m.redraw();
           const value = el.textContent ?? "";
           if (value !== prevValue) onChange(value);
-          el.textContent = vnode.attrs.displayValue;
+          el.textContent = latestVnode.attrs.displayValue;
         });
         el.addEventListener("keydown", (event: KeyboardEvent) => {
           if (event.code === "Enter") {
@@ -48,15 +52,21 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = () => {
         });
       }
     },
+    onupdate(vnode) {
+      latestVnode = vnode;
+      if (editableValueElem && !isEditing()) {
+        editableValueElem.textContent = latestVnode.attrs.displayValue;
+      }
+    },
     view({ attrs: { editableValue, displayValue, subscript, onChange } }) {
-      const isEditable = onChange !== undefined && editableValue !== undefined;
-      const isEditing = document.activeElement === editableValueElem;
+      const editable = onChange !== undefined && editableValue !== undefined;
+      const editing = isEditing();
       return m(
         ".status-tile",
         {
-          className: [isEditable && "editable", isEditing && "editing"].filter((n) => n).join(" "),
+          className: [editable && "editable", editing && "editing"].filter((n) => n).join(" "),
           onpointerdown: (event: PointerEvent) => {
-            if (isEditable && !isEditing) {
+            if (editable && !editing) {
               prevValue = editableValue;
               if (editableValueElem) {
                 editableValueElem.textContent = editableValue;
@@ -67,7 +77,7 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = () => {
           },
         },
         [
-          m(".status-tile-value", [isEditable ? m(".editable-value", displayValue) : displayValue]),
+          m(".status-tile-value", [editable ? m(".editable-value", displayValue) : displayValue]),
           m(".status-tile-subscript", subscript),
         ]
       );
