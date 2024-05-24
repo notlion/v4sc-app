@@ -74,11 +74,11 @@ const MainComponent: m.Component = {
 
         // Output Current
         m(StatusTile, {
-          editableValue: currentPreset.current.toFixed(1),
+          editableValue: currentPreset.getCurrent().toFixed(1),
           displayValue:
             status.dcOutputCurrent > 0
-              ? status.dcOutputCurrent.toFixed(1) + "/" + currentPreset.current.toFixed(1) + "A"
-              : currentPreset.current.toFixed(1) + "A",
+              ? status.dcOutputCurrent.toFixed(1) + "/" + currentPreset.getCurrent().toFixed(1) + "A"
+              : currentPreset.getCurrent().toFixed(1) + "A",
           subscript: outputPowerDisplay,
           onChange: (valueStr) => {
             const value = Number(valueStr);

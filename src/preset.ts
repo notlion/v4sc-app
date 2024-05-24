@@ -17,13 +17,15 @@ export class Preset {
   isSet() {
     return this.soc !== 0 && this.current !== 0;
   }
+  getCurrent() {
+    return this.current != Infinity ? this.current : charger.model?.maxcurrent ?? 0;
+  }
   getDesc() {
     const cellCount = charger.getCellCount() ?? 1;
     if (this.soc === 0 || this.current === 0) return this.name;
-    const cgoal = this.current != Infinity ? this.current : charger.model?.maxcurrent ?? 10;
     return [
       this.name,
-      cgoal.toFixed(0) + "A",
+      this.getCurrent().toFixed(0) + "A",
       this.soc.toFixed(0) + "%",
       (Charger.getVoltageForSoc(this.soc) * cellCount).toFixed(1) + "V",
     ].join(" ");
