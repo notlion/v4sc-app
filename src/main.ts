@@ -60,7 +60,8 @@ const MainComponent: m.Component = {
         m(StatusTile, {
           editableValue: formatNumber(setpointSOC ?? 0),
           displayValue: formatNumber(setpointSOC ?? 0) + "%",
-          subscript: formatNumber(currentPreset.getOutputVoltage(cellCount)) + "V",
+          subscript:
+            "setpoint. " + formatNumber(currentPreset.getOutputVoltage(cellCount), 0, 1) + "V",
           onChange: (valueStr) => {
             const value = Number(valueStr);
             if (!isFinite(value)) return;
@@ -75,13 +76,10 @@ const MainComponent: m.Component = {
         m(StatusTile, {
           editableValue: formatNumber(currentPreset.getCurrent()),
           displayValue:
-            status.dcOutputCurrent > 0
-              ? formatNumber(status.dcOutputCurrent) +
-                "/" +
-                formatNumber(currentPreset.getCurrent()) +
-                "A"
-              : formatNumber(currentPreset.getCurrent()) + "A",
-          subscript: formatNumber(status.dcOutputVoltage * status.dcOutputCurrent) + "W",
+            formatNumber(isCharging ? status.dcOutputCurrent : currentPreset.getCurrent()) + "A",
+          subscript: isCharging ?
+            formatNumber(status.dcOutputVoltage * status.dcOutputCurrent) + "W" :
+            "setpoint",
           onChange: (valueStr) => {
             const value = Number(valueStr);
             if (!isFinite(value)) return;
