@@ -36,19 +36,17 @@ const MainComponent: m.Component = {
     const cRating = capacityAh ? status.dcOutputCurrent / capacityAh : 0;
 
     return [
+      m("h2", [m(".val", [socStr[0], m("span.small", "." + socStr[1])])]),
+      m("h3", [
+        m(".val", timeEst ? Charger.timeStr(timeEst) : "∞"),
+        m(".sub", ["until " + goalSOCShow.toFixed(0) + "%"]),
+      ]),
       m(".status", [
-        m(".status-fullwidth", [
-          m("h2", [m(".val", [socStr[0], m("span.small", "." + socStr[1])])]),
-          m("h3", [
-            m(".val", timeEst ? Charger.timeStr(timeEst) : "∞"),
-            m(".sub", ["until " + goalSOCShow.toFixed(0) + "%"]),
-          ]),
-        ]),
         // Goal Charge Percentage
         m(StatusTile, {
           editableValue: (goalSOC ?? 0).toFixed(0),
           displayValue: (goalSOC ?? 0).toFixed(0) + "%",
-          subscript: outputPowerDisplay,
+          subscript: "setpoint",
           onChange: (valueStr) => {
             const value = Number(valueStr);
             if (!isFinite(value)) return;
@@ -100,68 +98,62 @@ const MainComponent: m.Component = {
           displayValue: (restCellV * cellCount).toFixed(1) + "V",
           subscript: "@ rest",
         }),
-        m(".status-fullwidth", [
-          m(".input-group", [
-            m("label", "Presets"),
-            m(SelectInput, {
-              className: "model-select",
-              options: allPresets.map((m) => m.getDesc()),
-              selected: Preset.currentPreset?.getDesc(),
-              onChange: (index: number) => {
-                if (index < 0) return;
-                Preset.currentPreset = allPresets[index];
-                Preset.currentPreset.sendOutput();
-              },
-            }),
-          ]),
-          m(".input-group", [
-            m("label", "Model" + (charger.autoDetectedModel ? " (detected)" : "")),
-            m(SelectInput, {
-              className: "model-select",
-              options: charger.modelsDB.models.map((m) => m.name),
-              selected: charger.model?.name,
-              onChange: (index: number) => {
-                charger.model = index >= 0 ? charger.modelsDB.models[index] : undefined;
-                charger.autoDetectedModel = false;
-                Preset.currentPreset?.sendOutput();
-              },
-            }),
-          ]),
-          m(
-            "button",
-            {
-              onclick: async () => {
-                if (charger.isConnected()) {
-                  charger.disconnect();
-                } else {
-                  try {
-                    charger.connect();
-                  } catch (err) {}
-                }
-              },
-            },
-            charger.isConnected() ? "Disconnect" : "Connect"
-          ),
-          navigator.bluetooth
-            ? ""
-            : m(
-                "p",
-                "Web Bluetooth not available, try Chrome or ",
-                m(
-                  "a",
-                  { href: "https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055" },
-                  "Bluefy"
-                )
-              ),
-          m("footer", [
+      ]),
+      m(".input-group", [
+        m("label", "Presets"),
+        m(SelectInput, {
+          className: "model-select",
+          options: allPresets.map((m) => m.getDesc()),
+          selected: Preset.currentPreset?.getDesc(),
+          onChange: (index: number) => {
+            if (index < 0) return;
+            Preset.currentPreset = allPresets[index];
+            Preset.currentPreset.sendOutput();
+          },
+        }),
+      ]),
+      m(".input-group", [
+        m("label", "Model" + (charger.autoDetectedModel ? " (detected)" : "")),
+        m(SelectInput, {
+          className: "model-select",
+          options: charger.modelsDB.models.map((m) => m.name),
+          selected: charger.model?.name,
+          onChange: (index: number) => {
+            charger.model = index >= 0 ? charger.modelsDB.models[index] : undefined;
+            charger.autoDetectedModel = false;
+            Preset.currentPreset?.sendOutput();
+          },
+        }),
+      ]),
+      m(
+        "button",
+        {
+          onclick: async () => {
+            if (charger.isConnected()) {
+              charger.disconnect();
+            } else {
+              try {
+                charger.connect();
+              } catch (err) {}
+            }
+          },
+        },
+        charger.isConnected() ? "Disconnect" : "Connect"
+      ),
+      navigator.bluetooth
+        ? ""
+        : m(
+            "p",
+            "Web Bluetooth not available, try Chrome or ",
             m(
-              "p",
-              "Open source on ",
-              m("a", { href: "http://github.com/notlion/v4sc-app" }, "github")
-            ),
-            m(".sub", "Version ", version),
-          ]),
-        ]),
+              "a",
+              { href: "https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055" },
+              "Bluefy"
+            )
+          ),
+      m("footer", [
+        m("p", "Open source on ", m("a", { href: "http://github.com/notlion/v4sc-app" }, "github")),
+        m(".sub", "Version ", version),
       ]),
     ];
   },

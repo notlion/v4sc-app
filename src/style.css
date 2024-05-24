@@ -66,9 +66,24 @@ h1 {
   background-color: var(--editable-tile-background-color);
 }
 .status-tile-value {
+  position: relative;
   text-align: center;
   font-size: 36px;
   font-weight: 600;
+}
+.status-tile .editable-value {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+}
+.status-tile.editing .editable-value {
+  opacity: 1;
+}
+.status-tile.editing .display-value {
+  visibility: hidden;
 }
 .status-tile-subscript {
   text-align: center;

@@ -28,17 +28,16 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = () => {
 
       editableValueElem = el;
 
-      el.setAttribute("contenteditable", "true");
-      el.setAttribute("inputmode", "decimal");
+      el.contentEditable = "true";
+      el.inputMode = "decimal";
       el.spellcheck = false;
 
       const { onChange } = vnode.attrs;
       if (onChange) {
         el.addEventListener("blur", () => {
-          const value = el.textContent ?? "";
-          if (value === prevValue) return;
-          onChange(value);
           m.redraw();
+          const value = el.textContent ?? "";
+          if (value !== prevValue) onChange(value);
         });
         el.addEventListener("keydown", (event: KeyboardEvent) => {
           if (event.code === "Enter") {
@@ -50,12 +49,13 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = () => {
     },
     view({ attrs: { editableValue, displayValue, subscript, onChange } }) {
       const isEditable = onChange !== undefined && editableValue !== undefined;
+      const isEditing = document.activeElement === editableValueElem;
       return m(
         ".status-tile",
         {
-          className: isEditable ? "editable" : undefined,
+          className: [isEditable && "editable", isEditing && "editing"].filter((n) => n).join(" "),
           onpointerdown: (event: PointerEvent) => {
-            if (isEditable && document.activeElement !== editableValueElem) {
+            if (isEditable && !isEditing) {
               prevValue = editableValue;
               if (editableValueElem) {
                 focusAndSelectAll(editableValueElem);
@@ -65,7 +65,10 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = () => {
           },
         },
         [
-          m(".status-tile-value", isEditable ? m(".editable-value", editableValue) : displayValue),
+          m(".status-tile-value", [
+            m(".display-value", displayValue),
+            isEditable && m(".editable-value", editableValue),
+          ]),
           m(".status-tile-subscript", subscript),
         ]
       );
