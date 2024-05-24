@@ -56,11 +56,12 @@ const MainComponent: m.Component = {
               : "Not connected"
           ),
         ]),
+
         // Goal Charge Percentage
         m(StatusTile, {
           editableValue: (goalSOC ?? 0).toFixed(0),
           displayValue: (goalSOC ?? 0).toFixed(0) + "%",
-          subscript: "setpoint",
+          subscript: "Charge to %",
           onChange: (valueStr) => {
             const value = Number(valueStr);
             if (!isFinite(value)) return;
@@ -70,6 +71,7 @@ const MainComponent: m.Component = {
             Preset.userPreset.setSoc(value);
           },
         }),
+
         // Output Current
         m(StatusTile, {
           editableValue: currentPreset.current.toFixed(1),
@@ -85,16 +87,19 @@ const MainComponent: m.Component = {
             Preset.userPreset.setCurrent(value);
           },
         }),
+
         // C Rating
         m(StatusTile, {
           displayValue: cRating.toFixed(1) + "C",
           subscript: "C-rating of " + (capacityAh ?? 0).toFixed(1) + "Ah",
         }),
+
         // Resting Cell Voltage
         m(StatusTile, {
           displayValue: restCellV.toFixed(2) + "V",
           subscript: "rest v/cell " + cellCount + "S",
         }),
+
         // Temperature
         m(StatusTile, {
           displayValue: Math.max(status.temperature1, status.temperature2).toFixed(0) + "°c",
@@ -106,64 +111,70 @@ const MainComponent: m.Component = {
             "A",
           ],
         }),
+
         // Resting Pack Voltage
         m(StatusTile, {
           displayValue: (restCellV * cellCount).toFixed(1) + "V",
           subscript: "@ rest",
         }),
-      ]),
-      m(".input-group", [
-        m("label", "Presets"),
-        m(SelectInput, {
-          className: "model-select",
-          options: allPresets.map((m) => m.getDesc()),
-          selected: Preset.currentPreset?.getDesc(),
-          onChange: (index: number) => {
-            if (index < 0) return;
-            Preset.currentPreset = allPresets[index];
-            Preset.currentPreset.sendOutput();
-          },
-        }),
-      ]),
-      m(".input-group", [
-        m("label", "Model" + (charger.autoDetectedModel ? " (detected)" : "")),
-        m(SelectInput, {
-          className: "model-select",
-          options: charger.modelsDB.models.map((m) => m.name),
-          selected: charger.model?.name,
-          onChange: (index: number) => {
-            charger.model = index >= 0 ? charger.modelsDB.models[index] : undefined;
-            charger.autoDetectedModel = false;
-            Preset.currentPreset?.sendOutput();
-          },
-        }),
-      ]),
-      m(
-        "button",
-        {
-          onclick: async () => {
-            if (charger.isConnected()) {
-              charger.disconnect();
-            } else {
-              try {
-                charger.connect();
-              } catch (err) {}
-            }
-          },
-        },
-        charger.isConnected() ? "Disconnect" : "Connect"
-      ),
-      navigator.bluetooth
-        ? ""
-        : m(
-            "p",
-            "Web Bluetooth not available, try Chrome or ",
-            m(
-              "a",
-              { href: "https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055" },
-              "Bluefy"
-            )
+
+        m(".status-fullwidth", [
+          m(".input-group", [
+            m("label", "Presets"),
+            m(SelectInput, {
+              options: allPresets.map((m) => m.getDesc()),
+              selected: Preset.currentPreset ? Preset.currentPreset.getDesc() : undefined,
+              onChange: (index: number) => {
+                if (index < 0) return;
+                Preset.currentPreset = allPresets[index];
+                Preset.currentPreset.sendOutput();
+              },
+            }),
+          ]),
+        ]),
+        m(".status-fullwidth", [
+          m(".input-group", [
+            m("label", "Model" + (charger.autoDetectedModel ? " (detected)" : "")),
+            m(SelectInput, {
+              options: charger.modelsDB.models.map((m) => m.name),
+              selected: charger.model?.name,
+              onChange: (index: number) => {
+                charger.model = index >= 0 ? charger.modelsDB.models[index] : undefined;
+                charger.autoDetectedModel = false;
+                Preset.currentPreset?.sendOutput();
+              },
+            }),
+          ]),
+        ]),
+
+        m(".status-fullwidth", [
+          m(
+            "button",
+            {
+              onclick: async () => {
+                if (charger.isConnected()) {
+                  charger.disconnect();
+                } else {
+                  try {
+                    charger.connect();
+                  } catch (err) {}
+                }
+              },
+            },
+            charger.isConnected() ? "Disconnect" : "Connect"
           ),
+        ]),
+      ]),
+      !navigator.bluetooth &&
+        m(
+          "p",
+          "Web Bluetooth not available, try Chrome or ",
+          m(
+            "a",
+            { href: "https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055" },
+            "Bluefy"
+          )
+        ),
       m("footer", [
         m("p", "Open source on ", m("a", { href: "http://github.com/notlion/v4sc-app" }, "github")),
         m(".sub", "Version ", version),
