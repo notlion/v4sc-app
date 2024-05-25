@@ -49,8 +49,8 @@ const MainComponent: m.Component = {
             charger.isConnected()
               ? isCharging
                 ? timeEst
-                  ? [Charger.timeStr(timeEst), " until ", goalSOCShow.toFixed(0), "%"]
-                  : ["Over ", goalSOCShow.toFixed(0), "% charged"]
+                  ? [Charger.timeStr(timeEst), " until ", formatNumber(goalSOCShow), "%"]
+                  : ["Over ", formatNumber(goalSOCShow), "% charged"]
                 : "Not charging"
               : "Not connected"
           ),
