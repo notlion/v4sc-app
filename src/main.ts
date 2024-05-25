@@ -104,7 +104,7 @@ const MainComponent: m.Component = {
 
         // Temperature
         m(StatusTile, {
-          displayValue: formatNumber(Math.max(status.temperature1, status.temperature2)) + "°c",
+          displayValue: Math.max(status.temperature1, status.temperature2).toFixed(0) + "°c",
           subscript: [
             "AC ",
             formatNumber(status.acInputVoltage),
