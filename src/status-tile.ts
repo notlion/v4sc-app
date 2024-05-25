@@ -10,18 +10,6 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = (initialVnode) =>
   let prevValue: string | undefined;
   let editableValueElem: HTMLElement | undefined;
   let latestVnode = initialVnode;
-  const focusAndSelectAll = (el: HTMLElement) => {
-    el.focus();
-
-    // Select all.
-    const selection = window.getSelection();
-    if (selection) {
-      const selectAllRange = document.createRange();
-      selectAllRange.selectNodeContents(el);
-      selection.removeAllRanges();
-      selection.addRange(selectAllRange);
-    }
-  };
   const isEditing = () => {
     return document.activeElement === editableValueElem;
   };
@@ -38,6 +26,20 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = (initialVnode) =>
 
       const { onChange } = vnode.attrs;
       if (onChange) {
+        el.addEventListener("focus", () => {
+          const { editableValue } = latestVnode.attrs;
+          prevValue = editableValue;
+          editableValueElem!.textContent = editableValue!;
+
+          editableValueElem!.textContent = latestVnode.attrs.editableValue!;
+          const selection = window.getSelection();
+          if (selection) {
+            const selectAllRange = document.createRange();
+            selectAllRange.selectNodeContents(el);
+            selection.removeAllRanges();
+            selection.addRange(selectAllRange);
+          }
+        });
         el.addEventListener("blur", () => {
           m.redraw();
           const value = el.textContent ?? "";
@@ -67,10 +69,8 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = (initialVnode) =>
           className: [editable && "editable", editing && "editing"].filter((n) => n).join(" "),
           onpointerdown: (event: PointerEvent) => {
             if (editable && !editing) {
-              prevValue = editableValue;
               if (editableValueElem) {
-                editableValueElem.textContent = editableValue;
-                focusAndSelectAll(editableValueElem);
+                editableValueElem.focus();
               }
               event.preventDefault();
             }
