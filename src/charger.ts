@@ -108,7 +108,7 @@ export class Charger {
   }
 
   currentStatus() {
-    if (this.status.length < 1) return;
+    if (this.status.length < 1) return Charger.emptyStatus();
     return this.status[this.status.length - 1];
   }
 
@@ -129,12 +129,9 @@ export class Charger {
 
   getCellCount() {
     if (!this.model) {
-      const outV = this.currentStatus()?.dcOutputVoltage;
-      if (outV) {
-        this.model = this.modelsDB.detectModel(this.setpoint.voltage, outV);
-        if (this.model)
-          this.autoDetectedModel = true;
-      }
+      const outV = this.currentStatus().dcOutputVoltage;
+      this.model = this.modelsDB.detectModel(this.setpoint.voltage, outV);
+      if (this.model) this.autoDetectedModel = true;
     }
     return this.model?.seriescells;
   }

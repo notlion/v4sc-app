@@ -33,7 +33,6 @@ const MainComponent: m.Component = {
     console.log("render selected", Preset.currentPreset);
 
     const chargePercentageParts = ((soc ? soc.toFixed(1) : "0.0") + "%").split(".");
-    const outputPowerDisplay = (status.dcOutputVoltage * status.dcOutputCurrent).toFixed(1) + "W";
     const cRating = capacityAh ? status.dcOutputCurrent / capacityAh : 0;
     const isCharging = status.dcOutputCurrent > 0;
 
@@ -59,9 +58,9 @@ const MainComponent: m.Component = {
 
         // Goal Charge Percentage
         m(StatusTile, {
-          editableValue: (goalSOC ?? 0).toFixed(0),
-          displayValue: (goalSOC ?? 0).toFixed(0) + "%",
-          subscript: "Charge to %",
+          editableValue: formatNumber(goalSOC ?? 0),
+          displayValue: formatNumber(goalSOC ?? 0) + "%",
+          subscript: formatNumber(currentPreset.getOutputVoltage(cellCount)) + "V",
           onChange: (valueStr) => {
             const value = Number(valueStr);
             if (!isFinite(value)) return;
@@ -74,12 +73,15 @@ const MainComponent: m.Component = {
 
         // Output Current
         m(StatusTile, {
-          editableValue: currentPreset.getCurrent().toFixed(1),
+          editableValue: formatNumber(currentPreset.getCurrent()),
           displayValue:
             status.dcOutputCurrent > 0
-              ? status.dcOutputCurrent.toFixed(1) + "/" + currentPreset.getCurrent().toFixed(1) + "A"
-              : currentPreset.getCurrent().toFixed(1) + "A",
-          subscript: outputPowerDisplay,
+              ? formatNumber(status.dcOutputCurrent) +
+                "/" +
+                formatNumber(currentPreset.getCurrent()) +
+                "A"
+              : formatNumber(currentPreset.getCurrent()) + "A",
+          subscript: formatNumber(status.dcOutputVoltage * status.dcOutputCurrent) + "W",
           onChange: (valueStr) => {
             const value = Number(valueStr);
             if (!isFinite(value)) return;
@@ -90,31 +92,31 @@ const MainComponent: m.Component = {
 
         // C Rating
         m(StatusTile, {
-          displayValue: cRating.toFixed(1) + "C",
+          displayValue: formatNumber(cRating) + "C",
           subscript: "C-rating of " + (capacityAh ?? 0).toFixed(1) + "Ah",
         }),
 
         // Resting Cell Voltage
         m(StatusTile, {
-          displayValue: restCellV.toFixed(2) + "V",
+          displayValue: formatNumber(restCellV) + "V",
           subscript: "rest v/cell " + cellCount + "S",
         }),
 
         // Temperature
         m(StatusTile, {
-          displayValue: Math.max(status.temperature1, status.temperature2).toFixed(0) + "°c",
+          displayValue: formatNumber(Math.max(status.temperature1, status.temperature2)) + "°c",
           subscript: [
             "AC ",
-            status.acInputVoltage.toFixed(0),
+            formatNumber(status.acInputVoltage),
             "V ",
-            status.acInputCurrent.toFixed(1),
+            formatNumber(status.acInputCurrent),
             "A",
           ],
         }),
 
         // Resting Pack Voltage
         m(StatusTile, {
-          displayValue: (restCellV * cellCount).toFixed(1) + "V",
+          displayValue: formatNumber(restCellV * cellCount) + "V",
           subscript: "@ rest",
         }),
 
@@ -181,6 +183,20 @@ const MainComponent: m.Component = {
       ]),
     ];
   },
+};
+
+const formatNumber = (num: number, minFractionDigits = 0, maxFractionDigits = 2) => {
+  let str = num.toFixed(maxFractionDigits);
+  str = str.replace(/0*$/, "");
+  const decimalIndex = str.lastIndexOf(".");
+  const fractionDigits = str.length - decimalIndex - 1;
+  if (fractionDigits < minFractionDigits) {
+    str = str + new Array(minFractionDigits).fill("0").join("");
+  }
+  if (str[str.length - 1] === ".") {
+    return str.slice(0, str.length - 1);
+  }
+  return str;
 };
 
 const init = async () => {
