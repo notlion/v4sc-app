@@ -4,6 +4,7 @@
   --background-color: #000;
 
   --button-color: #c0c0c0;
+  --button-active-color: #0c326e;
   --button-text-color: rgba(0, 0, 0, 0.85);
 
   --tile-color: #030303;
@@ -129,12 +130,10 @@ button {
   color: var(--button-text-color);
   user-select: none;
   cursor: pointer;
-  transition: all 0.05s ease-out;
   outline: none;
   -webkit-tap-highlight-color: transparent;
   &:active {
-    transform: scale(105%);
-    background-color: rgb(0, 255, 149);
+    background-color: var(--button-active-color);
   }
 }
 
