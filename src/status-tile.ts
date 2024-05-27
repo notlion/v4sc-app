@@ -13,6 +13,11 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = (initialVnode) =>
   const isEditing = () => {
     return document.activeElement === editableValueElem;
   };
+  const onDocumentPointerDown = () => {
+    if (isEditing() && editableValueElem) {
+      editableValueElem.blur();
+    }
+  };
   return {
     oncreate(vnode) {
       const el = vnode.dom.querySelector(".editable-value");
@@ -24,6 +29,8 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = (initialVnode) =>
       el.inputMode = "decimal";
       el.spellcheck = false;
 
+      document.addEventListener("pointerdown", onDocumentPointerDown);
+
       const { onChange } = vnode.attrs;
       if (onChange) {
         el.addEventListener("focus", () => {
@@ -31,7 +38,7 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = (initialVnode) =>
           prevValue = editableValue;
           editableValueElem!.textContent = editableValue!;
 
-          editableValueElem!.textContent = latestVnode.attrs.editableValue!;
+          // Select All
           const selection = window.getSelection();
           if (selection) {
             const selectAllRange = document.createRange();
@@ -60,6 +67,9 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = (initialVnode) =>
         editableValueElem.textContent = latestVnode.attrs.displayValue;
       }
     },
+    onremove() {
+      document.removeEventListener("pointerdown", onDocumentPointerDown);
+    },
     view({ attrs: { editableValue, displayValue, subscript, onChange } }) {
       const editable = onChange !== undefined && editableValue !== undefined;
       const editing = isEditing();
@@ -74,6 +84,7 @@ export const StatusTile: m.ClosureComponent<StatusTileAttrs> = (initialVnode) =>
               }
               event.preventDefault();
             }
+            if (editable) event.stopPropagation();
           },
         },
         [
