@@ -236,6 +236,16 @@ export class Charger {
     return capWh / Charger.getVoltageForSoc(50) / cellCount;
   }
 
+  getAsymptoteSOC() {
+    const volt = this.setpoint.voltage;
+    const curr = this.setpoint.current;
+    const cellCount = this.getCellCount();
+    if (!cellCount || volt < 3.0 * cellCount || curr < 0.1) return;
+    const ir = this.getTotalInternalImpedance();
+    const restV = volt - curr * ir;
+    return Charger.getSOCFromVoltage(restV / cellCount);
+  }
+
   static timeStr(seconds: number) {
     if (seconds >= Infinity)
       return "∞";

@@ -15,9 +15,9 @@ const MainComponent: m.Component = {
     const currentPreset = Preset.currentPreset;
 
     const soc = charger.getStateOfCharge();
-    const goalSOC = charger.getSetpointSoc();
-    const goalSOCShow = !goalSOC || goalSOC > 90 ? 90 : goalSOC;
-    const timeEst = charger.getTimeEstimateSoc(goalSOCShow);
+    const setpointSOC = charger.getSetpointSoc();
+    const asymtoteSOC = charger.getAsymptoteSOC();
+    const timeEst = charger.getTimeEstimateSoc(asymtoteSOC);
     const restCellV = charger.getRestCellV() ?? 0;
     const cellCount = charger.getCellCount() ?? 0;
     const capacityAh = charger.getCapacityAh();
@@ -49,8 +49,8 @@ const MainComponent: m.Component = {
             charger.isConnected()
               ? isCharging
                 ? timeEst
-                  ? [Charger.timeStr(timeEst), " until ", formatNumber(goalSOCShow), "%"]
-                  : ["Over ", formatNumber(goalSOCShow), "% charged"]
+                  ? [Charger.timeStr(timeEst), " until ", formatNumber(asymtoteSOC ?? 0), "%"]
+                  : ["Over ", formatNumber(asymtoteSOC ?? 0), "% charged"]
                 : "Not charging"
               : "Not connected"
           ),
@@ -58,8 +58,8 @@ const MainComponent: m.Component = {
 
         // Goal Charge Percentage
         m(StatusTile, {
-          editableValue: formatNumber(goalSOC ?? 0),
-          displayValue: formatNumber(goalSOC ?? 0) + "%",
+          editableValue: formatNumber(setpointSOC ?? 0),
+          displayValue: formatNumber(setpointSOC ?? 0) + "%",
           subscript: formatNumber(currentPreset.getOutputVoltage(cellCount)) + "V",
           onChange: (valueStr) => {
             const value = Number(valueStr);
