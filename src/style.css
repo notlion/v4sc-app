@@ -1,6 +1,7 @@
 :root {
   /* Default dark mode */
   --text-color: rgba(255, 255, 255, 0.85);
+  --link-color: rgba(255, 255, 255, 0.85);
   --selection-color: rgba(255, 255, 255, 0.15);
   --background-color: #000;
 
@@ -20,6 +21,7 @@
 @media (prefers-color-scheme: light) {
   :root {
     --text-color: rgba(0, 0, 0, 0.85);
+    --link-color: rgba(0, 0, 0, 0.85);
     --selection-color: rgba(0, 0, 0, 0.15);
     --background-color: #fff;
 
@@ -69,6 +71,9 @@ body {
   align-items: center;
   justify-content: center;
   height: 150px;
+}
+.status-soc button {
+  width: auto;
 }
 .status-soc-value {
   font-size: 80px;
@@ -134,7 +139,7 @@ body {
 button {
   font-size: 18px;
   width: 100%;
-  padding: 10px;
+  padding: 12px 24px;
   border: 0;
   border-radius: 8px;
   background-color: var(--button-color);
@@ -159,6 +164,13 @@ select {
   height: 32px;
   text-align: center;
   outline: 0;
+}
+
+a {
+  color: var(--link-color);
+}
+a:active {
+  color: var(--button-active-color);
 }
 
 footer {

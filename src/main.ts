@@ -30,31 +30,51 @@ const MainComponent: m.Component = {
       console.log("user preset set", Preset.userPreset, "current", Preset.currentPreset);
     }
     const allPresets = Preset.getAllPresets();
-    console.log("render selected", Preset.currentPreset);
 
     const chargePercentageParts = ((soc ? soc.toFixed(1) : "0.0") + "%").split(".");
     const cRating = capacityAh ? status.dcOutputCurrent / capacityAh : 0;
     const isCharging = status.dcOutputCurrent > 0;
+    const isConnected = charger.isConnected();
 
     return [
       m(".status", [
         // Charge Percentage
-        m(".status-soc.status-fullwidth", [
-          m(".status-soc-value", [
-            chargePercentageParts[0],
-            m("span.small", "." + chargePercentageParts[1]),
-          ]),
-          m(
-            ".status-soc-subscript",
-            charger.isConnected()
-              ? isCharging
-                ? timeEst
-                  ? [Charger.timeStr(timeEst), " until ", formatNumber(asymtoteSOC ?? 0), "%"]
-                  : ["Over ", formatNumber(asymtoteSOC ?? 0), "% charged"]
-                : "Not charging"
-              : "Not connected"
-          ),
-        ]),
+        m(
+          ".status-soc.status-fullwidth",
+          navigator.bluetooth
+            ? isConnected
+              ? [
+                  m(".status-soc-value", [
+                    chargePercentageParts[0],
+                    m("span.small", "." + chargePercentageParts[1]),
+                  ]),
+                  m(
+                    ".status-soc-subscript",
+                    isConnected
+                      ? isCharging
+                        ? timeEst
+                          ? [
+                              Charger.timeStr(timeEst),
+                              " until ",
+                              formatNumber(asymtoteSOC ?? 0),
+                              "%",
+                            ]
+                          : ["Over ", formatNumber(asymtoteSOC ?? 0), "% charged"]
+                        : "Not charging"
+                      : "Not connected"
+                  ),
+                ]
+              : m(ConnectButton)
+            : m(
+                "p",
+                "Web Bluetooth not available. Try Chrome or ",
+                m(
+                  "a",
+                  { href: "https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055" },
+                  "Bluefy"
+                )
+              )
+        ),
 
         // Goal Charge Percentage
         m(StatusTile, {
@@ -146,39 +166,33 @@ const MainComponent: m.Component = {
           ]),
         ]),
 
-        m(".status-fullwidth", [
-          m(
-            "button",
-            {
-              onclick: async () => {
-                if (charger.isConnected()) {
-                  charger.disconnect();
-                } else {
-                  try {
-                    charger.connect();
-                  } catch (err) {}
-                }
-              },
-            },
-            charger.isConnected() ? "Disconnect" : "Connect"
-          ),
-        ]),
+        isConnected && m(".status-fullwidth", m(ConnectButton)),
       ]),
-      !navigator.bluetooth &&
-        m(
-          "p",
-          "Web Bluetooth not available, try Chrome or ",
-          m(
-            "a",
-            { href: "https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055" },
-            "Bluefy"
-          )
-        ),
       m("footer", [
         m("p", "Open source on ", m("a", { href: "http://github.com/notlion/v4sc-app" }, "github")),
         m(".sub", "Version ", version),
       ]),
     ];
+  },
+};
+
+const ConnectButton: m.Component = {
+  view() {
+    return m(
+      "button",
+      {
+        onclick: async () => {
+          if (charger.isConnected()) {
+            charger.disconnect();
+          } else {
+            try {
+              charger.connect();
+            } catch (err) {}
+          }
+        },
+      },
+      charger.isConnected() ? "Disconnect" : "Connect"
+    );
   },
 };
 
