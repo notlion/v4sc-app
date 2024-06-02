@@ -63,6 +63,7 @@ body {
   grid-column: span 2;
 }
 .status-soc {
+  position: relative;
   background-color: var(--tile-color);
   border-radius: 12px;
   overflow: hidden;
@@ -74,15 +75,33 @@ body {
 }
 .status-soc button {
   width: auto;
+  background-color: transparent;
+  backdrop-filter: blur(16px);
 }
 .status-soc-value {
   font-size: 80px;
   font-weight: 600;
   line-height: 60px;
 }
+.status-soc-subscript {
+  font-size: 18px;
+}
+.status-soc.disconnected .status-soc-value,
+.status-soc.disconnected .status-soc-subscript {
+  opacity: 0.25;
+}
+.status-soc-overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .status-soc-value .small {
-  font-size: 48px;
-  margin-left: -4px;
+  font-size: 0.6em;
 }
 .status-tile {
   background-color: var(--tile-color);

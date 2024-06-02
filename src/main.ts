@@ -31,50 +31,49 @@ const MainComponent: m.Component = {
     }
     const allPresets = Preset.getAllPresets();
 
-    const chargePercentageParts = ((soc ? soc.toFixed(1) : "0.0") + "%").split(".");
+    const chargePercentageParts = formatNumber(soc ?? 100, 0, 1).split(".");
     const cRating = capacityAh ? status.dcOutputCurrent / capacityAh : 0;
     const isCharging = status.dcOutputCurrent > 0;
     const isConnected = charger.isConnected();
 
+    let mConnectionOverlay: m.Children;
+    if (navigator.bluetooth) {
+      if (!isConnected) {
+        mConnectionOverlay = m(ConnectButton);
+      }
+    } else {
+      mConnectionOverlay = m(
+        "p",
+        "Web Bluetooth not available. Try Chrome or ",
+        m(
+          "a",
+          { href: "https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055" },
+          "Bluefy"
+        )
+      );
+    }
+
     return [
       m(".status", [
         // Charge Percentage
-        m(
-          ".status-soc.status-fullwidth",
-          navigator.bluetooth
-            ? isConnected
-              ? [
-                  m(".status-soc-value", [
-                    chargePercentageParts[0],
-                    m("span.small", "." + chargePercentageParts[1]),
-                  ]),
-                  m(
-                    ".status-soc-subscript",
-                    isConnected
-                      ? isCharging
-                        ? timeEst
-                          ? [
-                              Charger.timeStr(timeEst),
-                              " until ",
-                              formatNumber(asymtoteSOC ?? 0),
-                              "%",
-                            ]
-                          : ["Over ", formatNumber(asymtoteSOC ?? 0), "% charged"]
-                        : "Not charging"
-                      : "Not connected"
-                  ),
-                ]
-              : m(ConnectButton)
-            : m(
-                "p",
-                "Web Bluetooth not available. Try Chrome or ",
-                m(
-                  "a",
-                  { href: "https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055" },
-                  "Bluefy"
-                )
-              )
-        ),
+        m(".status-soc.status-fullwidth", { className: isConnected ? undefined : "disconnected" }, [
+          m(".status-soc-value", [
+            chargePercentageParts[0],
+            chargePercentageParts.length === 2 && m("span.small", "." + chargePercentageParts[1]),
+            m("span.small", "%"),
+          ]),
+          m(
+            ".status-soc-subscript",
+            isConnected
+              ? isCharging
+                ? timeEst
+                  ? [Charger.timeStr(timeEst), " until ", formatNumber(asymtoteSOC ?? 0), "%"]
+                  : ["Over ", formatNumber(asymtoteSOC ?? 0), "% charged"]
+                : "Not charging"
+              : "Not connected"
+          ),
+          mConnectionOverlay && m(".status-soc-overlay", mConnectionOverlay),
+        ]),
 
         // Goal Charge Percentage
         m(StatusTile, {
