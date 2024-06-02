@@ -1,15 +1,15 @@
 :root {
   /* Default dark mode */
   --text-color: rgba(255, 255, 255, 0.85);
+  --selection-color: rgba(255, 255, 255, 0.15);
   --background-color: #000;
 
-  --button-color: #c0c0c0;
-  --button-active-color: #0c326e;
-  --button-text-color: rgba(0, 0, 0, 0.85);
+  --button-color: #222;
+  --button-active-color: #3a0eb2;
 
   --tile-color: #030303;
   --editable-tile-color: #222;
-  --editable-tile-editing-color: #0c326e;
+  --editable-tile-editing-color: #3a0eb2;
 
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif,
     Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
@@ -19,8 +19,16 @@
 
 @media (prefers-color-scheme: light) {
   :root {
-    --text-color: #000;
+    --text-color: rgba(0, 0, 0, 0.85);
+    --selection-color: rgba(0, 0, 0, 0.15);
     --background-color: #fff;
+
+    --button-color: #e6e6e6;
+    --button-active-color: #b8ccff;
+
+    --tile-color: #f8f8f8;
+    --editable-tile-color: #e6e6e6;
+    --editable-tile-editing-color: #b8ccff;
   }
 }
 
@@ -107,6 +115,9 @@ body {
   overflow: hidden;
   white-space: nowrap;
 }
+.editable-value::selection {
+  background-color: var(--selection-color);
+}
 .editable-value:focus {
   cursor: text;
 }
@@ -139,7 +150,7 @@ button {
 
 select {
   background-color: var(--button-color);
-  color: var(--button-text-color);
+  color: var(--text-color);
   border: 0;
   border-radius: 999px;
   padding: 0 16px;
