@@ -60,7 +60,7 @@ const MainComponent: m.Component = {
         m(StatusTile, {
           editableValue: formatNumber(setpointSOC ?? 0),
           displayValue: formatNumber(setpointSOC ?? 0) + "%",
-          subscript: formatNumber(currentPreset.getOutputVoltage(cellCount)) + "V",
+          subscript: formatNumber(currentPreset.getOutputVoltage(cellCount), 0, 1) + "V",
           onChange: (valueStr) => {
             const value = Number(valueStr);
             if (!isFinite(value)) return;
@@ -74,18 +74,13 @@ const MainComponent: m.Component = {
         // Output Current
         m(StatusTile, {
           editableValue: formatNumber(currentPreset.getCurrent()),
-          displayValue:
-            status.dcOutputCurrent > 0
-              ? formatNumber(status.dcOutputCurrent) +
-                "/" +
-                formatNumber(currentPreset.getCurrent()) +
-                "A"
-              : formatNumber(currentPreset.getCurrent()) + "A",
-          subscript: formatNumber(status.dcOutputVoltage * status.dcOutputCurrent) + "W",
+          displayValue: isCharging
+            ? formatNumber(status.dcOutputCurrent, 0, 1) + "A"
+            : formatNumber(currentPreset.getCurrent()) + "A",
+          subscript: formatNumber(status.dcOutputVoltage * status.dcOutputCurrent, 0, 0) + "W",
           onChange: (valueStr) => {
             const value = Number(valueStr);
             if (!isFinite(value)) return;
-            console.log(value);
             Preset.userPreset.setCurrent(value);
           },
         }),
@@ -107,16 +102,18 @@ const MainComponent: m.Component = {
           displayValue: Math.max(status.temperature1, status.temperature2).toFixed(0) + "°c",
           subscript: [
             "AC ",
-            formatNumber(status.acInputVoltage),
+            formatNumber(status.acInputVoltage, 0, 1),
             "V ",
-            formatNumber(status.acInputCurrent),
-            "A",
+            formatNumber(status.acInputCurrent, 0, 1),
+            "A ",
+            formatNumber(status.acInputVoltage * status.acInputCurrent, 0, 0),
+            "W",
           ],
         }),
 
         // Resting Pack Voltage
         m(StatusTile, {
-          displayValue: formatNumber(restCellV * cellCount) + "V",
+          displayValue: formatNumber(restCellV * cellCount, 0, 1) + "V",
           subscript: "@ rest",
         }),
 
