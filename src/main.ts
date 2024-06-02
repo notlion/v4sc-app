@@ -187,6 +187,12 @@ const MainComponent: m.Component = {
 
 const formatNumber = (num: number, minFractionDigits = 0, maxFractionDigits = 2) => {
   let str = num.toFixed(maxFractionDigits);
+
+  // Integers can skip the next part.
+  if (maxFractionDigits === 0) return str;
+
+  // Remove and add zeros so that `minFractionDigits` and `maxFractionDigits`
+  // are satisfied.
   str = str.replace(/0*$/, "");
   const decimalIndex = str.lastIndexOf(".");
   const fractionDigits = str.length - decimalIndex - 1;
