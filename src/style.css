@@ -2,7 +2,7 @@
   /* Default dark mode */
   --text-color: rgba(255, 255, 255, 0.85);
   --link-color: rgba(255, 255, 255, 0.85);
-  --selection-color: rgba(255, 255, 255, 0.15);
+  --selection-color: rgba(255, 255, 255, 0.2);
   --background-color: #000;
 
   --button-color: #222;
