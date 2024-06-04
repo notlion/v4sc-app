@@ -31,7 +31,7 @@ const MainComponent: m.Component = {
     }
     const allPresets = Preset.getAllPresets();
 
-    const chargePercentageParts = formatNumber(soc ?? 100, 0, 1).split(".");
+    const chargePercentage = (soc ?? 100).toFixed(0);
     const cRating = capacityAh ? status.dcOutputCurrent / capacityAh : 0;
     const isCharging = status.dcOutputCurrent > 0;
     const isConnected = charger.isConnected();
@@ -56,23 +56,20 @@ const MainComponent: m.Component = {
     return [
       m(".status", [
         // Charge Percentage
-        m(".status-soc.status-fullwidth", { className: isConnected ? undefined : "disconnected" }, [
-          m(".status-soc-value", [
-            chargePercentageParts[0],
-            chargePercentageParts.length === 2 && m("span.small", "." + chargePercentageParts[1]),
-            m("span.small", "%"),
-          ]),
+        m(".status-soc", { className: isConnected ? undefined : "disconnected" }, [
+          m(".status-soc-value", [chargePercentage, m("span.small", "%")]),
           m(
             ".status-soc-subscript",
-            isConnected
-              ? isCharging
-                ? timeEst
-                  ? [Charger.timeStr(timeEst), " until ", formatNumber(asymtoteSOC ?? 0), "%"]
-                  : ["Over ", formatNumber(asymtoteSOC ?? 0), "% charged"]
-                : "Not charging"
-              : "Not connected"
+            isConnected ? (isCharging ? "Charging" : "Not charging") : "Not connected"
           ),
           mConnectionOverlay && m(".status-soc-overlay", mConnectionOverlay),
+        ]),
+
+        // Time Estimate
+        m(".status-soc", { className: isConnected ? undefined : "disconnected" }, [
+          m(".status-soc-value", timeEst ? formatTime(timeEst) : "-"),
+          // : ["Over ", formatNumber(asymtoteSOC ?? 0), "% charged"]),
+          m(".status-soc-subscript", ["until ", formatNumber(asymtoteSOC ?? 0), "%"]),
         ]),
 
         // Goal Charge Percentage
@@ -95,10 +92,11 @@ const MainComponent: m.Component = {
         m(StatusTile, {
           editableValue: formatNumber(currentPreset.getCurrent()),
           displayValue:
-            formatNumber(isCharging ? status.dcOutputCurrent : currentPreset.getCurrent(), 0, 1) + "A",
-          subscript: isCharging ?
-            formatNumber(status.dcOutputVoltage * status.dcOutputCurrent) + "W" :
-            "setpoint",
+            formatNumber(isCharging ? status.dcOutputCurrent : currentPreset.getCurrent(), 0, 1) +
+            "A",
+          subscript: isCharging
+            ? formatNumber(status.dcOutputVoltage * status.dcOutputCurrent) + "W"
+            : "setpoint",
           onChange: (valueStr) => {
             const value = Number(valueStr);
             if (!isFinite(value)) return;
@@ -215,6 +213,17 @@ const formatNumber = (num: number, minFractionDigits = 0, maxFractionDigits = 2)
     return str.slice(0, str.length - 1);
   }
   return str;
+};
+
+const formatTime = (seconds: number) => {
+  if (seconds >= Infinity) return "∞";
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor(seconds / 60 - hrs * 60);
+  return [
+    hrs > 0 && [hrs.toFixed(), m("span.small", "h")],
+    hrs > 0 && mins > 0 && m("span.gap"),
+    mins > 0 && [mins.toFixed(), m("span.small", "m")],
+  ];
 };
 
 const init = async () => {

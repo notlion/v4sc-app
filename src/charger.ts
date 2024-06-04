@@ -246,14 +246,6 @@ export class Charger {
     return Charger.getSOCFromVoltage(restV / cellCount);
   }
 
-  static timeStr(seconds: number) {
-    if (seconds >= Infinity)
-      return "∞";
-    if (seconds < 3600)
-      return (seconds / 60).toFixed() + "m";
-    return (seconds / 3600).toFixed(1) + "h";
-  }
-
   async setOutputVoltage(dcVoltage: number) {
     this.setpoint.voltage = dcVoltage;
     if (!this.writeCharacteristic) return;

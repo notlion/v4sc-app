@@ -79,9 +79,12 @@ body {
   backdrop-filter: blur(16px);
 }
 .status-soc-value {
-  font-size: 80px;
+  font-size: 64px;
   font-weight: 600;
   line-height: 60px;
+}
+.status-soc-value .gap {
+  margin-left: 4px;
 }
 .status-soc-subscript {
   font-size: 18px;
