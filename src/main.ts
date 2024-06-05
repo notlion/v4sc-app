@@ -56,7 +56,7 @@ const MainComponent: m.Component = {
     return [
       m(".status", [
         // Charge Percentage
-        m(".status-soc", { className: isConnected ? undefined : "disconnected" }, [
+        m(".status-soc.status-fullwidth", { className: isConnected ? undefined : "disconnected" }, [
           m(".status-soc-value", [chargePercentage, m("span.small", "%")]),
           m(
             ".status-soc-subscript",
@@ -66,11 +66,17 @@ const MainComponent: m.Component = {
         ]),
 
         // Time Estimate
-        m(".status-soc", { className: isConnected ? undefined : "disconnected" }, [
-          m(".status-soc-value", timeEst ? formatTime(timeEst) : "-"),
-          // : ["Over ", formatNumber(asymtoteSOC ?? 0), "% charged"]),
-          m(".status-soc-subscript", ["until ", formatNumber(asymtoteSOC ?? 0), "%"]),
-        ]),
+        m(
+          ".status-tile.status-fullwidth",
+          { className: isConnected ? undefined : "disconnected" },
+          [
+            m(".status-tile-value", timeEst ? formatTime(timeEst) : "∞"),
+            m(
+              ".status-tile-subscript",
+              asymtoteSOC ? ["until ", formatNumber(asymtoteSOC ?? 0), "%"] : "until 100%"
+            ),
+          ]
+        ),
 
         // Goal Charge Percentage
         m(StatusTile, {
@@ -220,9 +226,9 @@ const formatTime = (seconds: number) => {
   const hrs = Math.floor(seconds / 3600);
   const mins = Math.floor(seconds / 60 - hrs * 60);
   return [
-    hrs > 0 && [hrs.toFixed(), m("span.small", "h")],
-    hrs > 0 && mins > 0 && m("span.gap"),
-    mins > 0 && [mins.toFixed(), m("span.small", "m")],
+    hrs > 0 && [hrs.toFixed(), "h"],
+    hrs > 0 && mins > 0 && " ",
+    mins > 0 && [mins.toFixed(), "m"],
   ];
 };
 

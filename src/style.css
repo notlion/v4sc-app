@@ -8,7 +8,7 @@
   --button-color: #222;
   --button-active-color: #3a0eb2;
 
-  --tile-color: #030303;
+  --tile-color: #080808;
   --editable-tile-color: #222;
   --editable-tile-editing-color: #3a0eb2;
 
@@ -71,7 +71,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 150px;
+  height: 130px;
 }
 .status-soc button {
   width: auto;
@@ -82,9 +82,6 @@ body {
   font-size: 64px;
   font-weight: 600;
   line-height: 60px;
-}
-.status-soc-value .gap {
-  margin-left: 4px;
 }
 .status-soc-subscript {
   font-size: 18px;
@@ -103,7 +100,7 @@ body {
   align-items: center;
   justify-content: center;
 }
-.status-soc-value .small {
+.status-soc .small {
   font-size: 0.6em;
 }
 .status-tile {
@@ -114,13 +111,13 @@ body {
   align-items: stretch;
   justify-content: center;
   padding: 4px;
-  user-select: none;
   overflow: hidden;
   height: 80px;
 }
 .status-tile.editable {
   cursor: pointer;
   background-color: var(--editable-tile-color);
+  user-select: none;
 }
 .status-tile.editing {
   background-color: var(--editable-tile-editing-color);
@@ -130,6 +127,9 @@ body {
   text-align: center;
   font-size: 32px;
   font-weight: 600;
+}
+.status-tile-value .gap {
+  margin-left: 8px;
 }
 .status-tile-subscript {
   text-align: center;
